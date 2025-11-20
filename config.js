@@ -57,7 +57,7 @@ export const GENRES = [
         id: 'cozyinterior',
         name: 'Cozy Interior',
         prompt: 'hygge aesthetic room, warm sunlight streaming through window, soft textures, comfortable pillows, still life',
-        image: 'https://images.unsplash.com/photo-1540914124281-30d473456c64?w=800&q=80'
+        image: 'https://plus.unsplash.com/premium_photo-1674815329488-c4fc6bf4ced8?q=80&w=1740&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D'
     },
     {
         id: 'lofi',
@@ -120,55 +120,43 @@ export const STYLES = [
         id: 'pixel',
         name: 'Pixel Art',
         prompt: 'pixel art style, retro gaming aesthetic, 16-bit graphics',
-        image: 'https://images.unsplash.com/photo-1550745165-9bc0b252726f?w=800&q=80'
+        image: 'https://images.unsplash.com/photo-1671750764695-10c7f164844c?q=80&w=870&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D'
     },
     {
         id: 'anime',
         name: 'Anime Aesthetic',
         prompt: 'anime style, vibrant colors, detailed line art, cinematic lighting, makoto shinkai style',
-        image: 'https://images.unsplash.com/photo-1620608552697-b2478a87383a?w=800&q=80'
+        image: 'https://plus.unsplash.com/premium_photo-1661964177687-57387c2cbd14?q=80&w=1740&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D'
     },
     {
         id: 'photoreal',
         name: 'Photorealistic',
         prompt: 'hyper-detailed photorealistic render, 8k resolution, volumetric lighting, depth of field, sharp focus',
-        image: 'https://images.unsplash.com/photo-1583086918809-5868f7f02241?w=800&q=80'
-    },
-    {
-        id: 'flatdesign',
-        name: 'Flat Design',
-        prompt: 'flat design style, clean shapes, shadowless, solid colors, modern vector graphics, corporate friendly',
-        image: 'https://images.unsplash.com/photo-1556740778-d1d867c54173?w=800&q=80'
+        image: 'https://images.unsplash.com/photo-1690626826406-c2fc0d344551?q=80&w=2064&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D'
     },
     {
         id: 'voxel',
         name: 'Voxel Art',
         prompt: 'voxel art style, 3d pixel blocks, isometric perspective, colorful and charming',
-        image: 'https://images.unsplash.com/photo-1605370213164-32b4b24e66c7?w=800&q=80'
-    },
-    {
-        id: 'steampunk',
-        name: 'Steampunk',
-        prompt: 'steampunk style, brass and copper mechanisms, Victorian aesthetic, sepia tones, intricate gears',
-        image: 'https://images.unsplash.com/photo-1554553256-d667637841c7?w=800&q=80'
+        image: 'https://images.unsplash.com/photo-1743306947426-06d3d970e58f?q=80&w=2064&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D'
     },
     {
         id: 'cinematic',
         name: 'Cinematic',
         prompt: 'cinematic still, wide angle, dramatic color grading, deep shadows and highlights, blockbuster quality',
-        image: 'https://images.unsplash.com/photo-1510511459019-5be776997a6a?w=800&q=80'
+        image: 'https://images.unsplash.com/photo-1610847455028-9e55e62bac33?q=80&w=1740&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D'
     },
     {
         id: 'glitch',
         name: 'Glitch Effect',
         prompt: 'glitch art style, digital distortion, corrupted data effect, RGB split, vibrant static noise',
-        image: 'https://images.unsplash.com/photo-1563820257768-3d1b702166e9?w=800&q=80'
+        image: 'https://images.unsplash.com/photo-1634368998864-8984df61cdda?q=80&w=870&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D'
     },
     {
         id: 'lowpoly',
         name: 'Low Poly',
         prompt: 'low poly 3d render, sharp geometric shapes, pastel color palette, minimalist landscape',
-        image: 'https://images.unsplash.com/photo-1522067576569-804d9c7c251d?w=800&q=80'
+        image: 'https://images.unsplash.com/photo-1643143596361-a39511490214?q=80&w=2064&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D'
     }
 ];
 export const COLOR_BIASES = [
@@ -208,6 +196,7 @@ export const APP_CONFIG = {
     WEBGL_PARTICLE_COUNT: 600,
     WEBGL_PARTICLE_COUNT_MOBILE: 300
 };
+
 
 
 
