@@ -698,33 +698,87 @@ function initWebGL() {
 // ============================================================================
 // SHARE FUNCTIONALITY
 // ============================================================================
+
 function toggleShareMenu() {
     const menu = document.getElementById('share-menu');
+    const nativeBtn = document.getElementById('native-share-btn');
+    const nativeDivider = document.getElementById('native-share-divider');
+    
+    // Check for native support and show/hide the button
+    // This assumes you added buttons with these IDs in index.html (as suggested previously)
+    if (nativeBtn && nativeDivider) {
+        if (navigator.share) {
+            nativeBtn.classList.remove('hidden');
+            nativeDivider.classList.remove('hidden');
+        } else {
+            nativeBtn.classList.add('hidden');
+            nativeDivider.classList.add('hidden');
+        }
+    }
+    
     menu.classList.toggle('active');
 }
 
 async function shareImage(platform) {
     const url = document.getElementById('result-image').src;
+    
+    if (!url) {
+        showToast('No image to share.', 'error');
+        toggleShareMenu(); // Close the menu if no image
+        return;
+    }
+
+    // Share data for Native and Twitter
+    const shareOptions = {
+        title: 'Wallpaper Studio Pro',
+        text: 'Check out this awesome AI-generated wallpaper I made with Wallpaper Studio Pro! #NothingCommunity',
+        url: url // The URL of the image
+    };
 
     switch (platform) {
+        case 'native':
+            // Use the Native Web Share API (best for mobile)
+            if (navigator.share) {
+                try {
+                    await navigator.share(shareOptions);
+                    // The native dialog usually handles closing itself.
+                } catch (error) {
+                    // Ignore if the user manually cancelled the share dialog
+                    if (error.name !== 'AbortError') {
+                        showToast('Share failed.', 'error');
+                    }
+                }
+            }
+            break;
+            
         case 'download':
             await downloadImageDirect(url);
             break;
+            
         case 'copy':
             copyToClipboard(url);
+            showToast('Image link copied to clipboard!', 'success');
             break;
+            
         case 'twitter':
-            window.open(`https://twitter.com/intent/tweet?text=Check out this wallpaper!&url=${encodeURIComponent(url)}`, '_blank');
+            // Create a specific, detailed share link for X/Twitter
+            const twitterText = encodeURIComponent(shareOptions.text + ' ' + shareOptions.url);
+            window.open(`https://twitter.com/intent/tweet?text=${twitterText}`, '_blank');
             break;
+            
         case 'facebook':
-            window.open(`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(url)}`, '_blank');
+            // Facebook uses the image URL as the main share content
+            window.open(`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(shareOptions.url)}`, '_blank');
             break;
     }
-
-    toggleShareMenu();
+    
+    // Close the share menu for non-native actions (Native share closes itself)
+    if (platform !== 'native') {
+        toggleShareMenu();
+    }
 }
 
-// Direct download helper function
+// Direct download helper function (No changes needed, your implementation is good)
 async function downloadImageDirect(url) {
     try {
         const response = await fetch(url);
@@ -747,7 +801,6 @@ async function downloadImageDirect(url) {
         showToast('Download failed', 'error');
     }
 }
-
 // ============================================================================
 // WEBGL GENERATION ANIMATION
 // ============================================================================
