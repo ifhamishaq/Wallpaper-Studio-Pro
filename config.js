@@ -57,7 +57,7 @@ export const GENRES = [
         id: 'cozyinterior',
         name: 'Cozy Interior',
         prompt: 'hygge aesthetic room, warm sunlight streaming through window, soft textures, comfortable pillows, still life',
-        image: 'https://plus.unsplash.com/premium_photo-1674815329488-c4fc6bf4ced8?q=80&w=1740&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D'
+        image: 'https://plus.unsplash.com/premium_photo-1674815329488-c4fc6bf4ced8'
     },
     {
         id: 'lofi',
@@ -120,37 +120,37 @@ export const STYLES = [
         id: 'pixel',
         name: 'Pixel Art',
         prompt: 'pixel art style, retro gaming aesthetic, 16-bit graphics',
-        image: 'https://images.unsplash.com/photo-1671750764695-10c7f164844c?q=80&w=870&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D'
+        image: 'https://images.unsplash.com/photo-1671750764695-10c7f164844c'
     },
     {
         id: 'anime',
         name: 'Anime Aesthetic',
         prompt: 'anime style, vibrant colors, detailed line art, cinematic lighting, makoto shinkai style',
-        image: 'https://plus.unsplash.com/premium_photo-1661964177687-57387c2cbd14?q=80&w=1740&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D'
+        image: 'https://plus.unsplash.com/premium_photo-1661964177687-57387c2cbd14'
     },
     {
         id: 'photoreal',
         name: 'Photorealistic',
         prompt: 'hyper-detailed photorealistic render, 8k resolution, volumetric lighting, depth of field, sharp focus',
-        image: 'https://images.unsplash.com/photo-1690626826406-c2fc0d344551?q=80&w=2064&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D'
+        image: 'https://images.unsplash.com/photo-1690626826406-c2fc0d344551'
     },
     {
         id: 'voxel',
         name: 'Voxel Art',
         prompt: 'voxel art style, 3d pixel blocks, isometric perspective, colorful and charming',
-        image: 'https://images.unsplash.com/photo-1743306947426-06d3d970e58f?q=80&w=2064&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D'
+        image: 'https://images.unsplash.com/photo-1743306947426-06d3d970e58f'
     },
     {
         id: 'cinematic',
         name: 'Cinematic',
         prompt: 'cinematic still, wide angle, dramatic color grading, deep shadows and highlights, blockbuster quality',
-        image: 'https://images.unsplash.com/photo-1610847455028-9e55e62bac33?q=80&w=1740&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D'
+        image: 'https://images.unsplash.com/photo-1610847455028-9e55e62bac33'
     },
     {
         id: 'glitch',
         name: 'Glitch Effect',
         prompt: 'glitch art style, digital distortion, corrupted data effect, RGB split, vibrant static noise',
-        image: 'https://images.unsplash.com/photo-1634368998864-8984df61cdda?q=80&w=870&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D'
+        image: 'https://images.unsplash.com/photo-1634368998864-8984df61cdda'
     },
     {
         id: 'lowpoly',
@@ -196,6 +196,7 @@ export const APP_CONFIG = {
     WEBGL_PARTICLE_COUNT: 600,
     WEBGL_PARTICLE_COUNT_MOBILE: 300
 };
+
 
 
 
