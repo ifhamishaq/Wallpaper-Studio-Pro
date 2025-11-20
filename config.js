@@ -1,4 +1,5 @@
 export const GENRES = [
+    // --- Original Genres ---
     {
         id: 'cyberpunk',
         name: 'Cyber City',
@@ -47,34 +48,35 @@ export const GENRES = [
         prompt: 'magical fantasy landscape, floating islands, mystical aurora',
         image: 'https://images.unsplash.com/photo-1518837695005-2083093ee35b?w=800&q=80'
     },
-   
+    // --- New Aesthetic/Relatable Genres ---
     {
         id: 'pastel',
         name: 'Pastel Dreamscape',
         prompt: 'minimalist dreamy landscape, soft pastel colors, ethereal light, calming and serene, abstract sky',
-        image: 'https://images.unsplash.com/photo-1533038590840-1cde6e668a91?w=800&q=80' // 
+        image: 'https://images.unsplash.com/photo-1533038590840-1cde6e668a91?w=800&q=80'
     },
     {
         id: 'cozyinterior',
         name: 'Cozy Interior',
         prompt: 'hygge aesthetic room, warm sunlight streaming through window, soft textures, comfortable pillows, still life',
-        image: 'https://images.unsplash.com/photo-1540914124281-30d473456c64?w=800&q=80' // 
+        image: 'https://images.unsplash.com/photo-1540914124281-30d473456c64?w=800&q=80'
     },
     {
         id: 'lofi',
         name: 'Lo-fi Study Vibes',
         prompt: 'lofi aesthetic, rainy window view, warm glowing desk lamp, steaming mug, peaceful nighttime scene, chilled out',
-        image: 'https://images.unsplash.com/photo-1534067783941-51c9c23ecefd?w=800&q=80' // 
+        image: 'https://images.unsplash.com/photo-1534067783941-51c9c23ecefd?w=800&q=80'
     },
     {
         id: 'goldenhour',
         name: 'Golden Hour City',
         prompt: 'city skyline at golden hour, warm saturated sunlight, lens flare, peaceful urban view, cinematic look',
-        image: 'https://images.unsplash.com/photo-1477959858617-67f85cf4f1df?w=800&q=80' // 
+        image: 'https://images.unsplash.com/photo-1477959858617-67f85cf4f1df?w=800&q=80'
     }
 ];
 
 export const STYLES = [
+    // --- Original Styles ---
     {
         id: 'minimal',
         name: 'Minimalist',
@@ -123,58 +125,54 @@ export const STYLES = [
         prompt: 'pixel art style, retro gaming aesthetic, 16-bit graphics',
         image: 'https://images.unsplash.com/photo-1550745165-9bc0b252726f?w=800&q=80'
     },
+    // --- New Styles ---
     {
         id: 'anime',
         name: 'Anime Aesthetic',
         prompt: 'anime style, vibrant colors, detailed line art, cinematic lighting, makoto shinkai style',
-        image: 'https://images.unsplash.com/photo-1620608552697-b2478a87383a?w=800&q=80' // 
+        image: 'https://images.unsplash.com/photo-1620608552697-b2478a87383a?w=800&q=80'
     },
     {
         id: 'photoreal',
         name: 'Photorealistic',
         prompt: 'hyper-detailed photorealistic render, 8k resolution, volumetric lighting, depth of field, sharp focus',
-        image: 'https://images.unsplash.com/photo-1583086918809-5868f7f02241?w=800&q=80' // 
-
+        image: 'https://images.unsplash.com/photo-1583086918809-5868f7f02241?w=800&q=80'
     },
     {
         id: 'flatdesign',
         name: 'Flat Design',
         prompt: 'flat design style, clean shapes, shadowless, solid colors, modern vector graphics, corporate friendly',
-        image: 'https://images.unsplash.com/photo-1556740778-d1d867c54173?w=800&q=80' // 
-
+        image: 'https://images.unsplash.com/photo-1556740778-d1d867c54173?w=800&q=80'
     },
     {
         id: 'voxel',
         name: 'Voxel Art',
         prompt: 'voxel art style, 3d pixel blocks, isometric perspective, colorful and charming',
-        image: 'https://images.unsplash.com/photo-1605370213164-32b4b24e66c7?w=800&q=80' // 
+        image: 'https://images.unsplash.com/photo-1605370213164-32b4b24e66c7?w=800&q=80'
     },
     {
         id: 'steampunk',
         name: 'Steampunk',
         prompt: 'steampunk style, brass and copper mechanisms, Victorian aesthetic, sepia tones, intricate gears',
-        image: 'https://images.unsplash.com/photo-1554553256-d667637841c7?w=800&q=80' // 
-
+        image: 'https://images.unsplash.com/photo-1554553256-d667637841c7?w=800&q=80'
     },
     {
         id: 'cinematic',
         name: 'Cinematic',
         prompt: 'cinematic still, wide angle, dramatic color grading, deep shadows and highlights, blockbuster quality',
-        image: 'https://images.unsplash.com/photo-1510511459019-5be776997a6a?w=800&q=80' // 
+        image: 'https://images.unsplash.com/photo-1510511459019-5be776997a6a?w=800&q=80'
     },
     {
         id: 'glitch',
         name: 'Glitch Effect',
         prompt: 'glitch art style, digital distortion, corrupted data effect, RGB split, vibrant static noise',
-        image: 'https://images.unsplash.com/photo-1563820257768-3d1b702166e9?w=800&q=80' // 
-
+        image: 'https://images.unsplash.com/photo-1563820257768-3d1b702166e9?w=800&q=80'
     },
     {
         id: 'lowpoly',
         name: 'Low Poly',
         prompt: 'low poly 3d render, sharp geometric shapes, pastel color palette, minimalist landscape',
-        image: 'https://images.unsplash.com/photo-1522067576569-804d9c7c251d?w=800&q=80' // 
-
+        image: 'https://images.unsplash.com/photo-1522067576569-804d9c7c251d?w=800&q=80'
     }
 ];
 
@@ -215,4 +213,5 @@ export const APP_CONFIG = {
     WEBGL_PARTICLE_COUNT: 600,
     WEBGL_PARTICLE_COUNT_MOBILE: 300
 };
+
 
