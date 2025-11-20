@@ -301,8 +301,37 @@
                 <i data-lucide="eye" class="w-6 h-6"></i>
             </button>
 
-     
-   
+            <!-- Share Button -->
+            <div class="relative">
+                <button onclick="toggleShareMenu()"
+                    class="btn-haptic p-2 bg-white/10 rounded-full hover:bg-white/20 text-white backdrop-blur-md"
+                    aria-label="Share options">
+                    <i data-lucide="share-2" class="w-6 h-6"></i>
+                </button>
+                <div id="share-menu" class="share-menu">
+                    <button onclick="shareImage('download')" class="share-btn" aria-label="Download">
+                        <i data-lucide="download" class="w-5 h-5"></i>
+                    </button>
+                    <button onclick="shareImage('copy')" class="share-btn" aria-label="Copy link">
+                        <i data-lucide="link" class="w-5 h-5"></i>
+                    </button>
+                    <button onclick="shareImage('twitter')" class="share-btn" aria-label="Share on Twitter">
+                        <i data-lucide="twitter" class="w-5 h-5"></i>
+                    </button>
+                </div>
+            </div>
+
+            <button onclick="closeResult()"
+                class="btn-haptic p-2 bg-white/10 rounded-full hover:bg-white/20 backdrop-blur-md" aria-label="Close">
+                <i data-lucide="x" class="w-6 h-6 text-white"></i>
+            </button>
+        </div>
+
+        <div class="flex-1 flex items-center justify-center p-4 overflow-hidden relative">
+            <div class="relative w-full h-full flex items-center justify-center">
+                <img id="result-image" src="" alt="Generated Wallpaper"
+                    class="max-h-full max-w-full rounded-2xl shadow-2xl object-contain">
+
                 <!-- Lock Screen Overlay -->
                 <div id="lock-screen-overlay"
                     class="absolute inset-0 pointer-events-none hidden flex flex-col items-center pt-20 text-white"
@@ -333,8 +362,4 @@
     <script type="module" src="app.js"></script>
 </body>
 
-
 </html>
-
-
-
