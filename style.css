@@ -43,47 +43,16 @@ body::after {
 }
 
 @keyframes grain-shift {
-
-    0%,
-    100% {
-        transform: translate(0, 0);
-    }
-
-    10% {
-        transform: translate(-5%, -10%);
-    }
-
-    20% {
-        transform: translate(-15%, 5%);
-    }
-
-    30% {
-        transform: translate(7%, -25%);
-    }
-
-    40% {
-        transform: translate(-5%, 25%);
-    }
-
-    50% {
-        transform: translate(-15%, 10%);
-    }
-
-    60% {
-        transform: translate(15%, 0%);
-    }
-
-    70% {
-        transform: translate(0%, 15%);
-    }
-
-    80% {
-        transform: translate(3%, 25%);
-    }
-
-    90% {
-        transform: translate(-10%, 10%);
-    }
+    0%, 100% { transform: translate(0, 0); }
+    10% { transform: translate(-5%, -10%); }
+    20% { transform: translate(-15%, 5%); }
+    30% { transform: translate(7%, -25%); }
+    40% { transform: translate(-5%, 25%); }
+    50% { transform: translate(-15%, 10%); }
+    60% { transform: translate(15%, 0%); }
+    70% { transform: translate(0%, 15%); }
+    80% { transform: translate(3%, 25%); }
+    90% { transform: translate(-10%, 10%); }
 }
 
 /* WebGL Background */
@@ -112,29 +81,33 @@ body::after {
     background-size: cover;
     background-position: center;
 }
-.group button[onclick*="Slide"] {
-    transform-style: flat !important;
-    will-change: transform, opacity;
-    z-index: 100 !important;
-    position: absolute;
-    cursor: pointer;
-    pointer-events: auto;
-    /* FIX: Increase hit area significantly */
-    padding: 1.5rem !important; 
-    margin: -1rem; /* Offset the padding so visual center remains */
-}
 
-/* Reduce movement on click to prevent "missed" clicks */
-.group button[onclick*="Slide"]:active {
-    transform: scale(0.98) !important; /* Subtle scale instead of 0.95 */
-}
-/* Ensure the overlay doesn't block buttons */
 .carousel-overlay {
     background: linear-gradient(to bottom, rgba(0, 0, 0, 0.2), rgba(0, 0, 0, 0.7));
     backdrop-filter: blur(2px);
     -webkit-backdrop-filter: blur(2px);
-    pointer-events: none; /* Critical: allows clicks to pass through to buttons */
+    /* FIX: Allow clicks to pass through overlay to buttons */
+    pointer-events: none;
 }
+
+/* Carousel Navigation Buttons - Fix for Clickability */
+.group button[onclick*="Slide"] {
+    transform-style: flat !important;
+    will-change: transform, opacity;
+    z-index: 50 !important; /* Raised Z-Index */
+    position: absolute;
+    cursor: pointer;
+    pointer-events: auto !important; /* Force clickability */
+}
+
+.group button[onclick*="Slide"]:hover {
+    transform: scale(1.1) !important;
+}
+
+.group button[onclick*="Slide"]:active {
+    transform: scale(0.95) !important;
+}
+
 /* Scrollbar Hide */
 .no-scrollbar::-webkit-scrollbar {
     display: none;
@@ -255,17 +228,8 @@ body::after {
 
 /* Loading Animation */
 @keyframes pulse-glow {
-
-    0%,
-    100% {
-        opacity: 1;
-        transform: scale(1);
-    }
-
-    50% {
-        opacity: 0.7;
-        transform: scale(1.05);
-    }
+    0%, 100% { opacity: 1; transform: scale(1); }
+    50% { opacity: 0.7; transform: scale(1.05); }
 }
 
 .pulse-glow {
@@ -274,17 +238,9 @@ body::after {
 
 /* Button Haptic Feedback */
 @keyframes button-press {
-    0% {
-        transform: scale(1);
-    }
-
-    50% {
-        transform: scale(0.95);
-    }
-
-    100% {
-        transform: scale(1);
-    }
+    0% { transform: scale(1); }
+    50% { transform: scale(0.95); }
+    100% { transform: scale(1); }
 }
 
 .btn-haptic:active {
@@ -390,11 +346,9 @@ body::after {
         height: 65vh;
         max-height: 650px;
     }
-
     #history-drawer {
         width: 100%;
     }
-
     .batch-grid {
         grid-template-columns: repeat(2, 1fr);
     }
