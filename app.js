@@ -154,7 +154,7 @@ function updateCarouselUI() {
 }
 
 // ============================================================================
-// PROMPT PROTECTION LOGIC (The Fix)
+// PROMPT PROTECTION LOGIC
 // ============================================================================
 function checkPromptConflict() {
     if (state.isPromptManuallyEdited) {
@@ -567,6 +567,11 @@ async function handleGenerate() {
     statusDiv.classList.remove('hidden');
     resultImage.classList.add('hidden');
     actions.classList.add('hidden');
+
+    // *** FIX: Reset Opacity explicitly here ***
+    // This ensures animation is visible even if triggering consecutively
+    canvas.style.opacity = '1';
+    statusDiv.style.opacity = '1';
 
     document.getElementById('loading-text').innerText = `Creating ${state.isDesktopMode ? 'Desktop' : 'Mobile'} Wallpaper`;
 
