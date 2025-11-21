@@ -159,7 +159,16 @@ export const STYLES = [
         image: 'https://images.unsplash.com/photo-1643143596361-a39511490214'
     }
 ];
-
+export const COLOR_BIASES = [
+    { id: null, name: 'None', color: 'bg-gray-600', border: 'border-white/30' },
+    { id: 'red', name: 'Red', color: 'bg-red-600', border: '' },
+    { id: 'blue', name: 'Blue', color: 'bg-blue-600', border: '' },
+    { id: 'gold', name: 'Gold', color: 'bg-yellow-500', border: '' },
+    { id: 'black and white', name: 'B&W', color: 'bg-black', border: 'border-white' },
+    { id: 'purple', name: 'Purple', color: 'bg-purple-600', border: '' },
+    { id: 'green', name: 'Green', color: 'bg-green-600', border: '' },
+    { id: 'orange', name: 'Orange', color: 'bg-orange-600', border: '' }
+];
 
 export const PROMPT_TEMPLATES = [
     'A serene {genre} scene in {style} style with {color} tones',
@@ -185,3 +194,4 @@ export const APP_CONFIG = {
     WEBGL_PARTICLE_COUNT: 600,
     WEBGL_PARTICLE_COUNT_MOBILE: 300
 };
+
