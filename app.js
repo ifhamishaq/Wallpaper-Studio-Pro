@@ -1,5 +1,5 @@
 // Wallpaper Studio Pro - Main Application
-import { GENRES, STYLES, COLOR_BIASES, PROMPT_TEMPLATES, API_CONFIG, APP_CONFIG } from './config.js';
+import { GENRES, STYLES, PROMPT_TEMPLATES, API_CONFIG, APP_CONFIG } from './config.js';
 
 // ============================================================================
 // STATE MANAGEMENT
@@ -13,14 +13,14 @@ const state = {
     favorites: JSON.parse(localStorage.getItem('wallpaper_favorites') || '[]'),
     advancedMode: false,
     seed: null,
-    numSteps: 4
+    numSteps: 4,
+    isPromptManuallyEdited: false // Flag to track manual edits
 };
 
 // ============================================================================
 // UTILITY FUNCTIONS
 // ============================================================================
 
-// Debounce function for performance
 function debounce(func, wait) {
     let timeout;
     return function executedFunction(...args) {
@@ -33,12 +33,10 @@ function debounce(func, wait) {
     };
 }
 
-// Check if mobile device
 function isMobileDevice() {
     return window.innerWidth < 768;
 }
 
-// Toast notification system
 function showToast(message, type = 'info', duration = 3000) {
     const existingToast = document.querySelector('.toast');
     if (existingToast) {
@@ -71,7 +69,6 @@ function showToast(message, type = 'info', duration = 3000) {
     }, duration);
 }
 
-// Copy to clipboard
 async function copyToClipboard(text) {
     try {
         await navigator.clipboard.writeText(text);
@@ -88,7 +85,6 @@ window.onload = () => {
     lucide.createIcons();
     initCarousel();
     initWebGL();
-    initTilt();
     initKeyboardNavigation();
     renderHistory();
     renderFavorites();
@@ -96,7 +92,11 @@ window.onload = () => {
 
     document.getElementById('generate-button').addEventListener('click', handleGenerate);
 
-    // Load saved preferences
+    // Track manual prompt editing
+    document.getElementById('custom-prompt').addEventListener('input', () => {
+        state.isPromptManuallyEdited = true;
+    });
+
     loadPreferences();
 };
 
@@ -148,11 +148,42 @@ function updateCarouselUI() {
     document.getElementById('style-track').style.transform = `translateX(-${state.activeStyleIndex * 100}%)`;
     document.getElementById('genre-label').innerText = GENRES[state.activeGenreIndex].name;
     document.getElementById('style-label').innerText = STYLES[state.activeStyleIndex].name;
+    
     updateCustomPromptPlaceholder();
     savePreferences();
 }
 
+// ============================================================================
+// PROMPT PROTECTION LOGIC (The Fix)
+// ============================================================================
+function checkPromptConflict() {
+    if (state.isPromptManuallyEdited) {
+        const choice = confirm(
+            "You have a custom prompt active.\n\n" +
+            "Click OK to DISCARD it and switch styles.\n" +
+            "Click CANCEL to keep your prompt."
+        );
+
+        if (choice) {
+            // User chose to discard/overwrite.
+            // AUTO-COPY Feature: Save old prompt to clipboard before destroying it
+            const oldPrompt = document.getElementById('custom-prompt').value;
+            navigator.clipboard.writeText(oldPrompt).then(() => {
+                showToast("Old prompt copied to clipboard", "info");
+            }).catch(() => {});
+
+            state.isPromptManuallyEdited = false;
+            document.getElementById('custom-prompt').value = ''; 
+            return true; // Allow change
+        }
+        return false; // Block change
+    }
+    return true; // No conflict
+}
+
 function nextSlide(type) {
+    if (!checkPromptConflict()) return; 
+
     if (type === 'genre') {
         state.activeGenreIndex = (state.activeGenreIndex + 1) % GENRES.length;
     } else {
@@ -162,6 +193,8 @@ function nextSlide(type) {
 }
 
 function prevSlide(type) {
+    if (!checkPromptConflict()) return; 
+
     if (type === 'genre') {
         state.activeGenreIndex = (state.activeGenreIndex - 1 + GENRES.length) % GENRES.length;
     } else {
@@ -171,6 +204,13 @@ function prevSlide(type) {
 }
 
 function randomize() {
+    state.isPromptManuallyEdited = false; 
+    document.getElementById('custom-prompt').value = '';
+    
+    if (!document.getElementById('generation-overlay').classList.contains('hidden')) {
+        closeGenerationDisplay();
+    }
+
     const cycles = 5;
     let count = 0;
     const interval = setInterval(() => {
@@ -187,8 +227,9 @@ function randomize() {
 // ============================================================================
 function initKeyboardNavigation() {
     document.addEventListener('keydown', (e) => {
-        // Don't interfere with typing in inputs
         if (e.target.tagName === 'TEXTAREA' || e.target.tagName === 'INPUT') return;
+
+        const isGenerationOverlayOpen = !document.getElementById('generation-overlay').classList.contains('hidden');
 
         switch (e.key) {
             case 'ArrowLeft':
@@ -224,10 +265,31 @@ function initKeyboardNavigation() {
                 e.preventDefault();
                 toggleHistory();
                 break;
+            case 'v':
+            case 'V':
+                if (isGenerationOverlayOpen) {
+                    e.preventDefault();
+                    viewFullResult();
+                }
+                break;
+            case 'd':
+            case 'D':
+                if (isGenerationOverlayOpen) {
+                    e.preventDefault();
+                    downloadGenerated();
+                }
+                break;
+            case 'x':
+            case 'X':
             case 'Escape':
-                closeResult();
-                if (!document.getElementById('history-drawer').classList.contains('translate-x-full')) {
-                    toggleHistory();
+                e.preventDefault();
+                if (isGenerationOverlayOpen) {
+                    closeGenerationDisplay();
+                } else {
+                    closeResult();
+                    if (!document.getElementById('history-drawer').classList.contains('translate-x-full')) {
+                        toggleHistory();
+                    }
                 }
                 break;
         }
@@ -240,13 +302,14 @@ function initKeyboardNavigation() {
 function togglePromptEditor() {
     const area = document.getElementById('custom-prompt');
     area.classList.toggle('hidden');
+    
     if (!area.classList.contains('hidden')) {
-        updateCustomPromptPlaceholder(true);
+        updateCustomPromptPlaceholder();
         area.focus();
     }
 }
 
-function updateCustomPromptPlaceholder(forceVal = false) {
+function updateCustomPromptPlaceholder() {
     const genre = GENRES[state.activeGenreIndex].prompt;
     const style = STYLES[state.activeStyleIndex].prompt;
     const color = state.selectedColorBias ? `, ${state.selectedColorBias} color palette` : '';
@@ -254,42 +317,18 @@ function updateCustomPromptPlaceholder(forceVal = false) {
     const text = `${genre}, ${style}${color}${customColorText}. 8k resolution, highly detailed.`;
 
     const area = document.getElementById('custom-prompt');
+    
     area.placeholder = text;
-    if (forceVal && !area.value) area.value = text;
+
+    if (!state.isPromptManuallyEdited) {
+        area.value = text;
+    }
 }
 
 function copyPrompt() {
     const area = document.getElementById('custom-prompt');
     const prompt = area.value || area.placeholder;
     copyToClipboard(prompt);
-}
-
-// ============================================================================
-// 3D TILT EFFECT
-// ============================================================================
-function initTilt() {
-    const container = document.getElementById('tilt-wrapper');
-    const card = document.getElementById('main-card');
-
-    const handleMouseMove = debounce((e) => {
-        const rect = container.getBoundingClientRect();
-        const x = e.clientX - rect.left;
-        const y = e.clientY - rect.top;
-
-        const centerX = rect.width / 2;
-        const centerY = rect.height / 2;
-
-        const rotateX = ((y - centerY) / centerY) * -10;
-        const rotateY = ((x - centerX) / centerX) * 10;
-
-        card.style.transform = `rotateX(${rotateX}deg) rotateY(${rotateY}deg)`;
-    }, 10);
-
-    container.addEventListener('mousemove', handleMouseMove);
-
-    container.addEventListener('mouseleave', () => {
-        card.style.transform = `rotateX(0deg) rotateY(0deg)`;
-    });
 }
 
 // ============================================================================
@@ -466,7 +505,6 @@ function toggleFavorite(url) {
 }
 
 function renderFavorites() {
-    // This can be expanded to show a favorites tab
     const count = state.favorites.length;
     const badge = document.getElementById('favorites-badge');
     if (badge) {
@@ -502,17 +540,13 @@ function updateTime() {
 // API & GENERATION
 // ============================================================================
 async function handleGenerate() {
-    // API key check removed - handled by backend
-
-
     const genre = GENRES[state.activeGenreIndex];
     const style = STYLES[state.activeStyleIndex];
-    const customPromptVal = document.getElementById('custom-prompt').value;
+    
+    const promptInput = document.getElementById('custom-prompt');
+    let finalPrompt = promptInput.value;
 
-    let finalPrompt = "";
-    if (!document.getElementById('custom-prompt').classList.contains('hidden') && customPromptVal.trim().length > 0) {
-        finalPrompt = customPromptVal;
-    } else {
+    if (!finalPrompt || finalPrompt.trim() === '') {
         const color = state.selectedColorBias ? `, ${state.selectedColorBias} color palette` : '';
         const customColorText = state.customColor ? `, ${state.customColor} tones` : '';
         finalPrompt = `${genre.prompt}, ${style.prompt}${color}${customColorText}. ${state.isDesktopMode ? 'Desktop' : 'Mobile'} wallpaper, 8k resolution, highly detailed, aesthetic.`;
@@ -522,7 +556,6 @@ async function handleGenerate() {
     const h = parseInt(document.getElementById('height').value);
     const seed = state.seed || Math.floor(Math.random() * 1000000);
 
-    // Show Generation Display with Animation
     const overlay = document.getElementById('generation-overlay');
     const canvas = document.getElementById('webgl-generation-canvas');
     const statusDiv = document.getElementById('generation-status');
@@ -537,19 +570,16 @@ async function handleGenerate() {
 
     document.getElementById('loading-text').innerText = `Creating ${state.isDesktopMode ? 'Desktop' : 'Mobile'} Wallpaper`;
 
-    // Initialize WebGL animation
     initGenerationAnimation();
 
     try {
         let data = null;
         for (let i = 0; i < API_CONFIG.MAX_RETRIES; i++) {
             try {
-                // Call our own Netlify function (proxy)
                 const response = await fetch(API_CONFIG.BASE_URL + API_CONFIG.GENERATION_ENDPOINT, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json'
-                        // Auth header is now handled by the backend function
                     },
                     body: JSON.stringify({
                         prompt: finalPrompt,
@@ -570,7 +600,6 @@ async function handleGenerate() {
         }
 
         if (data && data.output) {
-            // Stop animation and show image
             stopGenerationAnimation();
 
             const canvas = document.getElementById('webgl-generation-canvas');
@@ -578,7 +607,6 @@ async function handleGenerate() {
             const resultImage = document.getElementById('generation-result-image');
             const actions = document.getElementById('generation-actions');
 
-            // Fade out animation
             canvas.style.transition = 'opacity 0.5s ease';
             statusDiv.style.transition = 'opacity 0.5s ease';
             canvas.style.opacity = '0';
@@ -588,7 +616,6 @@ async function handleGenerate() {
                 canvas.classList.add('hidden');
                 statusDiv.classList.add('hidden');
 
-                // Show image with fade in
                 resultImage.src = data.output;
                 resultImage.classList.remove('hidden');
                 resultImage.style.opacity = '0';
@@ -601,7 +628,6 @@ async function handleGenerate() {
                 }, 50);
             }, 500);
 
-            // Store for later use
             window.currentGeneratedImage = data.output;
             window.currentGeneratedSeed = seed;
 
@@ -619,13 +645,9 @@ async function handleGenerate() {
     }
 }
 
-// Batch generation
 async function handleBatchGenerate() {
     const count = parseInt(document.getElementById('batch-count').value) || 4;
     showToast(`Generating ${count} variations...`, 'info', 3000);
-
-    // This would need UI for showing multiple results
-    // Implementation depends on desired UX
 }
 
 function showResult(url, seed = null) {
@@ -703,9 +725,7 @@ function toggleShareMenu() {
     const menu = document.getElementById('share-menu');
     const nativeBtn = document.getElementById('native-share-btn');
     const nativeDivider = document.getElementById('native-share-divider');
-    
-    // Check for native support and show/hide the button
-    // This assumes you added buttons with these IDs in index.html (as suggested previously)
+
     if (nativeBtn && nativeDivider) {
         if (navigator.share) {
             nativeBtn.classList.remove('hidden');
@@ -715,70 +735,62 @@ function toggleShareMenu() {
             nativeDivider.classList.add('hidden');
         }
     }
-    
+
     menu.classList.toggle('active');
 }
 
 async function shareImage(platform) {
     const url = document.getElementById('result-image').src;
-    
+
     if (!url) {
         showToast('No image to share.', 'error');
-        toggleShareMenu(); // Close the menu if no image
+        toggleShareMenu(); 
         return;
     }
 
-    // Share data for Native and Twitter
     const shareOptions = {
         title: 'Wallpaper Studio Pro',
         text: 'Check out this awesome AI-generated wallpaper I made with Wallpaper Studio Pro! #NothingCommunity',
-        url: url // The URL of the image
+        url: url 
     };
 
     switch (platform) {
         case 'native':
-            // Use the Native Web Share API (best for mobile)
             if (navigator.share) {
                 try {
                     await navigator.share(shareOptions);
-                    // The native dialog usually handles closing itself.
                 } catch (error) {
-                    // Ignore if the user manually cancelled the share dialog
                     if (error.name !== 'AbortError') {
                         showToast('Share failed.', 'error');
                     }
                 }
             }
             break;
-            
+
         case 'download':
             await downloadImageDirect(url);
             break;
-            
+
         case 'copy':
             copyToClipboard(url);
             showToast('Image link copied to clipboard!', 'success');
             break;
-            
+
         case 'twitter':
-            // Create a specific, detailed share link for X/Twitter
             const twitterText = encodeURIComponent(shareOptions.text + ' ' + shareOptions.url);
             window.open(`https://twitter.com/intent/tweet?text=${twitterText}`, '_blank');
             break;
-            
+
         case 'facebook':
-            // Facebook uses the image URL as the main share content
             window.open(`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(shareOptions.url)}`, '_blank');
             break;
     }
-    
-    // Close the share menu for non-native actions (Native share closes itself)
+
     if (platform !== 'native') {
         toggleShareMenu();
     }
 }
 
-// Direct download helper function (No changes needed, your implementation is good)
 async function downloadImageDirect(url) {
     try {
         const response = await fetch(url);
@@ -792,7 +804,6 @@ async function downloadImageDirect(url) {
         link.click();
         document.body.removeChild(link);
 
-        // Clean up the blob URL
         setTimeout(() => URL.revokeObjectURL(blobUrl), 100);
 
         showToast('Download started', 'success');
@@ -809,9 +820,6 @@ let generationCamera = null;
 let generationRenderer = null;
 let generationAnimationId = null;
 
-
-
-
 function initGenerationAnimation() {
     const canvas = document.getElementById('webgl-generation-canvas');
     const container = document.getElementById('main-card');
@@ -826,7 +834,6 @@ function initGenerationAnimation() {
     generationRenderer.setSize(width, height);
     generationCamera.position.z = 15;
 
-    // Create pixel particles that will merge together
     const pixelCount = 3000;
     const pixelGeometry = new THREE.BufferGeometry();
     const positions = new Float32Array(pixelCount * 3);
@@ -834,34 +841,29 @@ function initGenerationAnimation() {
     const velocities = new Float32Array(pixelCount * 3);
     const targetPositions = new Float32Array(pixelCount * 3);
 
-    // Initialize pixels scattered far away
     for (let i = 0; i < pixelCount; i++) {
         const i3 = i * 3;
 
-        // Start positions - scattered far behind (negative Z)
         const radius = 40 + Math.random() * 20;
         const theta = Math.random() * Math.PI * 2;
         const phi = Math.random() * Math.PI;
 
         positions[i3] = radius * Math.sin(phi) * Math.cos(theta);
         positions[i3 + 1] = radius * Math.sin(phi) * Math.sin(theta);
-        positions[i3 + 2] = -radius; // Start far behind
+        positions[i3 + 2] = -radius; 
 
-        // Target positions - fill the entire screen
         const gridSize = Math.ceil(Math.sqrt(pixelCount));
         const x = (i % gridSize) - gridSize / 2;
         const y = Math.floor(i / gridSize) - gridSize / 2;
 
-        targetPositions[i3] = x * 0.08; // Reduced spacing to fill screen
+        targetPositions[i3] = x * 0.08; 
         targetPositions[i3 + 1] = y * 0.08;
         targetPositions[i3 + 2] = 0;
 
-        // Velocities for subtle movement
         velocities[i3] = (Math.random() - 0.5) * 0.05;
         velocities[i3 + 1] = (Math.random() - 0.5) * 0.05;
         velocities[i3 + 2] = (Math.random() - 0.5) * 0.05;
 
-        // Initialize size for blur effect
         sizes[i] = 0.12;
     }
 
@@ -880,7 +882,6 @@ function initGenerationAnimation() {
     const pixelSystem = new THREE.Points(pixelGeometry, pixelMaterial);
     generationScene.add(pixelSystem);
 
-    // Add glowing center point
     const centerGeometry = new THREE.SphereGeometry(0.3, 32, 32);
     const centerMaterial = new THREE.MeshBasicMaterial({
         color: 0xffffff,
@@ -890,11 +891,9 @@ function initGenerationAnimation() {
     const centerSphere = new THREE.Mesh(centerGeometry, centerMaterial);
     generationScene.add(centerSphere);
 
-    // Add ambient light
     const ambientLight = new THREE.AmbientLight(0x606060);
     generationScene.add(ambientLight);
 
-    // Animation loop
     let startTime = Date.now();
 
     function animate() {
@@ -903,28 +902,22 @@ function initGenerationAnimation() {
         const elapsed = (Date.now() - startTime) * 0.001;
         const positions = pixelGeometry.attributes.position.array;
 
-        // Make pixels flow continuously
         for (let i = 0; i < pixelCount; i++) {
             const i3 = i * 3;
 
-            // Continuous flowing motion
             positions[i3] += velocities[i3] * 2;
             positions[i3 + 1] += velocities[i3 + 1] * 2;
-            positions[i3 + 2] += 0.15; // Move forward continuously
+            positions[i3 + 2] += 0.15; 
 
-            // Add wave motion for organic flow
             positions[i3] += Math.sin(elapsed * 0.5 + i * 0.1) * 0.02;
             positions[i3 + 1] += Math.cos(elapsed * 0.5 + i * 0.1) * 0.02;
 
-            // Reset pixels that move too far forward
             if (positions[i3 + 2] > 5) {
-                // Send them back behind
                 positions[i3 + 2] = -50 - Math.random() * 10;
                 positions[i3] = (Math.random() - 0.5) * 20;
                 positions[i3 + 1] = (Math.random() - 0.5) * 20;
             }
 
-            // Blur effect: vary size based on depth
             const depth = positions[i3 + 2];
             const normalizedDepth = Math.max(0, Math.min(1, (-depth + 5) / 50));
             const baseSize = 0.05;
@@ -935,10 +928,8 @@ function initGenerationAnimation() {
         pixelGeometry.attributes.position.needsUpdate = true;
         pixelGeometry.attributes.size.needsUpdate = true;
 
-        // Rotate the entire system very slowly
         pixelSystem.rotation.y = elapsed * 0.03;
 
-        // Pulse the center sphere
         const pulse = 1 + Math.sin(elapsed * 3) * 0.25;
         centerSphere.scale.set(pulse, pulse, pulse);
         centerSphere.material.opacity = 0.15 + Math.sin(elapsed * 3) * 0.08;
@@ -967,12 +958,10 @@ function closeGenerationDisplay() {
     const overlay = document.getElementById('generation-overlay');
     overlay.classList.add('hidden');
 
-    // Reset for next generation
     const canvas = document.getElementById('webgl-generation-canvas');
     const statusDiv = document.getElementById('generation-status');
     const resultImage = document.getElementById('generation-result-image');
-    const actions = document.getElementById('generation-actions');
-
+    
     canvas.style.opacity = '1';
     statusDiv.style.opacity = '1';
     resultImage.src = '';
@@ -1031,11 +1020,11 @@ window.downloadFromModal = async function () {
 // INITIALIZATION
 // ============================================================================
 document.addEventListener('DOMContentLoaded', () => {
-    initCarousels();
+    if (document.readyState === 'complete') return;
+    initCarousel();
     initWebGL();
-    loadHistory();
+    renderHistory();
     updateCustomPromptPlaceholder();
-    setupKeyboardShortcuts();
-    setup3DTilt();
+    initKeyboardNavigation();
     lucide.createIcons();
 });
