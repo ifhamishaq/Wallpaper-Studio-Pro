@@ -155,151 +155,211 @@
                 </div>
 
                 <!-- Generated Image (hidden initially) -->
-                <!-- Control Area -->
-                <div class="w-full max-w-md mt-6 flex flex-col items-center gap-4 z-10">
+                <img id="generation-result-image" src="" alt="Generated Wallpaper"
+                    class="absolute inset-0 w-full h-full object-cover hidden">
 
-                    <!-- Prompt Editor Toggle -->
-                    <div class="w-full">
-                        <div class="flex items-center justify-center gap-2 mb-2">
-                            <button onclick="togglePromptEditor()"
-                                class="btn-haptic text-xs text-gray-400 hover:text-white transition flex items-center gap-1"
-                                aria-label="Edit prompt">
-                                <i data-lucide="edit-3" class="w-3 h-3"></i> Edit Prompt
-                            </button>
-                            <button onclick="copyPrompt()"
-                                class="btn-haptic text-xs text-gray-400 hover:text-white transition flex items-center gap-1"
-                                title="Copy prompt to clipboard" aria-label="Copy prompt">
-                                <i data-lucide="copy" class="w-3 h-3"></i> Copy
-                            </button>
-                        </div>
-                        <textarea id="custom-prompt"
-                            class="hidden w-full bg-white/10 text-sm p-3 rounded-xl border border-white/10 focus:outline-none focus:border-white/50 h-24 resize-none mb-2 placeholder-gray-500 backdrop-blur-md"
-                            placeholder="Modify your prompt here..." aria-label="Custom prompt input"></textarea>
-                    </div>
-
-                    <!-- Advanced Controls Toggle -->
-                    <button onclick="toggleAdvancedControls()"
-                        class="btn-haptic text-xs text-gray-400 hover:text-white transition flex items-center gap-1"
-                        aria-label="Toggle advanced controls">
-                        <i data-lucide="chevron-down" class="w-3 h-3"></i> Advanced Settings
-                    </button>
-
-                    <!-- Advanced Controls Panel -->
-                    <div id="advanced-controls"
-                        class="advanced-controls w-full bg-white/5 rounded-xl p-4 space-y-3 backdrop-blur-md border border-white/10">
-                        <div>
-                            <label class="text-xs text-gray-400 block mb-1">Seed (for reproducibility)</label>
-                            <div class="flex gap-2">
-                                <input type="number" id="seed-input" oninput="updateSeed(this.value)"
-                                    class="flex-1 bg-white/10 text-sm p-2 rounded-lg border border-white/10 focus:outline-none focus:border-white/50 backdrop-blur-sm"
-                                    placeholder="Random" aria-label="Seed value">
-                                <button onclick="randomSeed()"
-                                    class="btn-haptic px-3 bg-white/10 rounded-lg hover:bg-white/20 transition backdrop-blur-sm"
-                                    aria-label="Generate random seed">
-                                    <i data-lucide="shuffle" class="w-4 h-4"></i>
-                                </button>
-                            </div>
-                        </div>
-                        <div>
-                            <label class="text-xs text-gray-400 block mb-1">Quality Steps: <span
-                                    id="steps-value">4</span></label>
-                            <input type="range" id="steps-input" min="1" max="8" value="4"
-                                oninput="updateSteps(this.value)" class="w-full" aria-label="Quality steps">
-                        </div>
-                    </div>
-
-                    <!-- Generate Button -->
-                    <button id="generate-button"
-                        class="btn-haptic w-full bg-white text-black font-bold text-lg py-4 rounded-full shadow-lg hover:scale-[1.02] active:scale-[0.98] transition-transform flex items-center justify-center gap-2"
-                        aria-label="Create wallpaper (Shortcut: Enter)">
-                        <i data-lucide="wand-2" class="w-5 h-5"></i>
-                        <span>Create Wallpaper</span>
-                    </button>
-
-                    <!-- Surprise Me Button - Enhanced Visibility -->
-                    <button onclick="randomize()"
-                        class="btn-haptic w-full bg-gradient-to-r from-purple-600 to-pink-600 text-white font-semibold text-base py-3 px-6 rounded-full shadow-lg hover:from-purple-700 hover:to-pink-700 hover:scale-[1.02] active:scale-[0.98] transition-all flex items-center justify-center gap-2 border border-purple-400/30"
-                        role="dialog" aria-label="History drawer">
-                        <div class="p-4 border-b border-white/10 flex justify-between items-center">
-                            <h2 class="font-bold text-lg">History</h2>
-                            <div class="flex gap-2">
-                                <button onclick="clearHistory()"
-                                    class="btn-haptic text-xs text-red-400 hover:text-red-300"
-                                    aria-label="Clear all history">
-                                    Clear All
-                                </button>
-                                <button onclick="toggleHistory()" class="btn-haptic p-1 hover:bg-white/10 rounded-full"
-                                    aria-label="Close history">
-                                    <i data-lucide="x" class="w-5 h-5"></i>
-                                </button>
-                            </div>
-                        </div>
-                        class="btn-haptic p-2 bg-white/10 rounded-full hover:bg-white/20 text-white backdrop-blur-md"
-                        title="Preview Lock Screen" aria-label="Toggle lock screen preview">
-                        <i data-lucide="eye" class="w-6 h-6"></i>
-                    </button>
-
-                    <!-- Share Button -->
-                    <div class="relative">
-                        <button onclick="toggleShareMenu()"
-                            class="btn-haptic p-2 bg-white/10 rounded-full hover:bg-white/20 text-white backdrop-blur-md"
-                            aria-label="Share options">
-                            <i data-lucide="share-2" class="w-6 h-6"></i>
+                <!-- Image Actions (shown after generation) -->
+                <div id="generation-actions"
+                    class="absolute bottom-0 left-0 right-0 p-4 bg-gradient-to-t from-black via-black/80 to-transparent hidden z-20">
+                    <div class="flex gap-2">
+                        <button onclick="viewFullResult()"
+                            class="flex-1 bg-white text-black font-bold py-3 px-4 rounded-full hover:bg-gray-200 transition flex items-center justify-center gap-2 text-sm">
+                            <i data-lucide="maximize-2" class="w-4 h-4"></i>
+                            <span>View Full</span>
                         </button>
-                        <div id="share-menu" class="share-menu">
-                            <button onclick="shareImage('download')" class="share-btn" aria-label="Download">
-                                <i data-lucide="download" class="w-5 h-5"></i>
-                            </button>
-                            <button onclick="shareImage('copy')" class="share-btn" aria-label="Copy link">
-                                <i data-lucide="link" class="w-5 h-5"></i>
-                            </button>
-                            <button onclick="shareImage('twitter')" class="share-btn" aria-label="Share on Twitter">
-                                <i data-lucide="twitter" class="w-5 h-5"></i>
-                            </button>
-                        </div>
+                        <button onclick="downloadGenerated()"
+                            class="flex-1 bg-white/10 backdrop-blur-md text-white font-bold py-3 px-4 rounded-full hover:bg-white/20 transition flex items-center justify-center gap-2 text-sm">
+                            <i data-lucide="download" class="w-4 h-4"></i>
+                            <span>Download</span>
+                        </button>
+                        <button onclick="closeGenerationDisplay()"
+                            class="bg-white/10 backdrop-blur-md text-white font-bold py-3 px-4 rounded-full hover:bg-white/20 transition flex items-center justify-center">
+                            <i data-lucide="x" class="w-4 h-4"></i>
+                        </button>
                     </div>
+                </div>
+            </div>
+        </div>
+    </div>
 
-                    <button onclick="closeResult()"
-                        class="btn-haptic p-2 bg-white/10 rounded-full hover:bg-white/20 backdrop-blur-md"
-                        aria-label="Close">
-                        <i data-lucide="x" class="w-6 h-6 text-white"></i>
+    <!-- Control Area -->
+    <div class="w-full max-w-md mt-6 flex flex-col items-center gap-4 z-10">
+
+        <!-- Prompt Editor Toggle -->
+        <div class="w-full">
+            <div class="flex items-center justify-center gap-2 mb-2">
+                <button onclick="togglePromptEditor()"
+                    class="btn-haptic text-xs text-gray-400 hover:text-white transition flex items-center gap-1"
+                    aria-label="Edit prompt">
+                    <i data-lucide="edit-3" class="w-3 h-3"></i> Edit Prompt
+                </button>
+                <button onclick="copyPrompt()"
+                    class="btn-haptic text-xs text-gray-400 hover:text-white transition flex items-center gap-1"
+                    title="Copy prompt to clipboard" aria-label="Copy prompt">
+                    <i data-lucide="copy" class="w-3 h-3"></i> Copy
+                </button>
+            </div>
+            <textarea id="custom-prompt"
+                class="hidden w-full bg-white/10 text-sm p-3 rounded-xl border border-white/10 focus:outline-none focus:border-white/50 h-24 resize-none mb-2 placeholder-gray-500 backdrop-blur-md"
+                placeholder="Modify your prompt here..." aria-label="Custom prompt input"></textarea>
+        </div>
+
+        <!-- Advanced Controls Toggle -->
+        <button onclick="toggleAdvancedControls()"
+            class="btn-haptic text-xs text-gray-400 hover:text-white transition flex items-center gap-1"
+            aria-label="Toggle advanced controls">
+            <i data-lucide="chevron-down" class="w-3 h-3"></i> Advanced Settings
+        </button>
+
+        <!-- Advanced Controls Panel -->
+        <div id="advanced-controls"
+            class="advanced-controls w-full bg-white/5 rounded-xl p-4 space-y-3 backdrop-blur-md border border-white/10">
+            <div>
+                <label class="text-xs text-gray-400 block mb-1">Seed (for reproducibility)</label>
+                <div class="flex gap-2">
+                    <input type="number" id="seed-input" oninput="updateSeed(this.value)"
+                        class="flex-1 bg-white/10 text-sm p-2 rounded-lg border border-white/10 focus:outline-none focus:border-white/50 backdrop-blur-sm"
+                        placeholder="Random" aria-label="Seed value">
+                    <button onclick="randomSeed()"
+                        class="btn-haptic px-3 bg-white/10 rounded-lg hover:bg-white/20 transition backdrop-blur-sm"
+                        aria-label="Generate random seed">
+                        <i data-lucide="shuffle" class="w-4 h-4"></i>
                     </button>
                 </div>
+            </div>
+            <div>
+                <label class="text-xs text-gray-400 block mb-1">Quality Steps: <span id="steps-value">4</span></label>
+                <input type="range" id="steps-input" min="1" max="8" value="4" oninput="updateSteps(this.value)"
+                    class="w-full" aria-label="Quality steps">
+            </div>
+        </div>
 
-                <div class="flex-1 flex items-center justify-center p-4 overflow-hidden relative">
-                    <div class="relative w-full h-full flex items-center justify-center">
-                        <img id="result-image" src="" alt="Generated Wallpaper"
-                            class="max-h-full max-w-full rounded-2xl shadow-2xl object-contain">
+        <!-- Generate Button -->
+        <button id="generate-button"
+            class="btn-haptic w-full bg-white text-black font-bold text-lg py-4 rounded-full shadow-lg hover:scale-[1.02] active:scale-[0.98] transition-transform flex items-center justify-center gap-2"
+            aria-label="Create wallpaper (Shortcut: Enter)">
+            <i data-lucide="wand-2" class="w-5 h-5"></i>
+            <span>Create Wallpaper</span>
+        </button>
 
-                        <!-- Lock Screen Overlay -->
-                        <div id="lock-screen-overlay"
-                            class="absolute inset-0 pointer-events-none hidden flex flex-col items-center pt-20 text-white"
-                            aria-hidden="true">
-                            <div class="text-6xl font-thin tracking-tighter" id="lock-time">12:45</div>
-                            <div class="text-lg font-medium mt-2" id="lock-date">Thursday, November 20</div>
-                            <div class="mt-auto mb-12 text-xs tracking-widest opacity-60 animate-pulse">SWIPE UP TO
-                                UNLOCK</div>
-                        </div>
-                    </div>
-                </div>
+        <!-- Surprise Me Button - Enhanced Visibility -->
+        <button onclick="randomize()"
+            class="btn-haptic w-full bg-gradient-to-r from-purple-600 to-pink-600 text-white font-semibold text-base py-3 px-6 rounded-full shadow-lg hover:from-purple-700 hover:to-pink-700 hover:scale-[1.02] active:scale-[0.98] transition-all flex items-center justify-center gap-2 border border-purple-400/30"
+            aria-label="Randomize selection (Shortcut: R)">
+            <i data-lucide="dice-5" class="w-5 h-5"></i>
+            <span>Surprise Me</span>
+        </button>
 
-                <div class="p-6 flex flex-col gap-3 bg-gradient-to-t from-black to-transparent z-50">
-                    <p id="result-seed" class="text-center text-xs text-gray-400 hidden"></p>
-                    <button id="download-link" onclick="downloadFromModal()"
-                        class="btn-haptic w-full bg-white text-black font-bold py-4 rounded-full text-center hover:bg-gray-200 transition flex items-center justify-center gap-2">
+        <!-- Keyboard Shortcuts Info -->
+        <details class="text-xs text-gray-500 text-center">
+            <summary class="cursor-pointer hover:text-gray-300">Keyboard Shortcuts</summary>
+            <div class="mt-2 space-y-1">
+                <p>← → : Change Genre</p>
+                <p>↑ ↓ : Change Style</p>
+                <p>Enter : Generate</p>
+                <p>R : Randomize</p>
+                <p>H : History</p>
+                <p>Esc : Close</p>
+            </div>
+        </details>
+    </div>
+
+    <!-- History Drawer -->
+    <div id="history-drawer"
+        class="fixed top-0 right-0 h-full w-80 bg-[#121212]/90 backdrop-blur-xl border-l border-white/10 z-40 transform translate-x-full transition-transform duration-300 shadow-2xl overflow-hidden flex flex-col"
+        role="dialog" aria-label="History drawer">
+        <div class="p-4 border-b border-white/10 flex justify-between items-center">
+            <h2 class="font-bold text-lg">History</h2>
+            <div class="flex gap-2">
+                <button onclick="clearHistory()" class="btn-haptic text-xs text-red-400 hover:text-red-300"
+                    aria-label="Clear all history">
+                    Clear All
+                </button>
+                <button onclick="toggleHistory()" class="btn-haptic p-1 hover:bg-white/10 rounded-full"
+                    aria-label="Close history">
+                    <i data-lucide="x" class="w-5 h-5"></i>
+                </button>
+            </div>
+        </div>
+        <div id="history-list" class="flex-1 overflow-y-auto p-4 space-y-4">
+            <p class="text-gray-500 text-center mt-10">No wallpapers yet.</p>
+        </div>
+    </div>
+
+    <!-- Overlay for history -->
+    <div id="history-overlay" onclick="toggleHistory()" class="fixed inset-0 bg-black/50 z-30 hidden backdrop-blur-sm"
+        aria-hidden="true"></div>
+
+    <!-- Result Modal -->
+    <div id="result-modal" class="fixed inset-0 bg-black/95 z-50 hidden flex flex-col" role="dialog"
+        aria-label="Generated wallpaper">
+        <div class="flex justify-between p-4 z-50">
+            <!-- Lock Screen Preview Toggle -->
+            <button onclick="toggleLockScreen()"
+                class="btn-haptic p-2 bg-white/10 rounded-full hover:bg-white/20 text-white backdrop-blur-md"
+                title="Preview Lock Screen" aria-label="Toggle lock screen preview">
+                <i data-lucide="eye" class="w-6 h-6"></i>
+            </button>
+
+            <!-- Share Button -->
+            <div class="relative">
+                <button onclick="toggleShareMenu()"
+                    class="btn-haptic p-2 bg-white/10 rounded-full hover:bg-white/20 text-white backdrop-blur-md"
+                    aria-label="Share options">
+                    <i data-lucide="share-2" class="w-6 h-6"></i>
+                </button>
+                <div id="share-menu" class="share-menu">
+                    <button onclick="shareImage('download')" class="share-btn" aria-label="Download">
                         <i data-lucide="download" class="w-5 h-5"></i>
-                        Download Wallpaper
                     </button>
-                    <p class="text-center text-xs text-gray-500">Generated by Flux-1 Schnell</p>
+                    <button onclick="shareImage('copy')" class="share-btn" aria-label="Copy link">
+                        <i data-lucide="link" class="w-5 h-5"></i>
+                    </button>
+                    <button onclick="shareImage('twitter')" class="share-btn" aria-label="Share on Twitter">
+                        <i data-lucide="twitter" class="w-5 h-5"></i>
+                    </button>
                 </div>
             </div>
 
-            <!-- Hidden Logic Inputs -->
-            <input type="hidden" id="width" value="1080">
-            <input type="hidden" id="height" value="1920">
+            <button onclick="closeResult()"
+                class="btn-haptic p-2 bg-white/10 rounded-full hover:bg-white/20 backdrop-blur-md" aria-label="Close">
+                <i data-lucide="x" class="w-6 h-6 text-white"></i>
+            </button>
+        </div>
 
-            <!-- Load Main Application Script -->
-            <script type="module" src="app.js"></script>
+        <div class="flex-1 flex items-center justify-center p-4 overflow-hidden relative">
+            <div class="relative w-full h-full flex items-center justify-center">
+                <img id="result-image" src="" alt="Generated Wallpaper"
+                    class="max-h-full max-w-full rounded-2xl shadow-2xl object-contain">
+
+                <!-- Lock Screen Overlay -->
+                <div id="lock-screen-overlay"
+                    class="absolute inset-0 pointer-events-none hidden flex flex-col items-center pt-20 text-white"
+                    aria-hidden="true">
+                    <div class="text-6xl font-thin tracking-tighter" id="lock-time">12:45</div>
+                    <div class="text-lg font-medium mt-2" id="lock-date">Thursday, November 20</div>
+                    <div class="mt-auto mb-12 text-xs tracking-widest opacity-60 animate-pulse">SWIPE UP TO UNLOCK</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="p-6 flex flex-col gap-3 bg-gradient-to-t from-black to-transparent z-50">
+            <p id="result-seed" class="text-center text-xs text-gray-400 hidden"></p>
+            <button id="download-link" onclick="downloadFromModal()"
+                class="btn-haptic w-full bg-white text-black font-bold py-4 rounded-full text-center hover:bg-gray-200 transition flex items-center justify-center gap-2">
+                <i data-lucide="download" class="w-5 h-5"></i>
+                Download Wallpaper
+            </button>
+            <p class="text-center text-xs text-gray-500">Generated by Flux-1 Schnell</p>
+        </div>
+    </div>
+
+    <!-- Hidden Logic Inputs -->
+    <input type="hidden" id="width" value="1080">
+    <input type="hidden" id="height" value="1920">
+
+    <!-- Load Main Application Script -->
+    <script type="module" src="app.js"></script>
 </body>
 
 </html>
