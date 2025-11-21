@@ -205,7 +205,7 @@ export const STYLES = [
         id: 'graphic',
         name: 'Graphic Design',
         prompt: 'bold graphic design style, vector art aesthetics, strong typography elements, flat distinct shapes',
-        image: 'https://images.unsplash.com/photo-1626785774573-4b799314346d?w=800&q=80'
+        image: 'https://images.unsplash.com/photo-1586974087421-2ba56dab378c'
     },
     {
         id: 'ink',
@@ -256,5 +256,6 @@ export const APP_CONFIG = {
     WEBGL_PARTICLE_COUNT: 600,
     WEBGL_PARTICLE_COUNT_MOBILE: 300
 };
+
 
 
