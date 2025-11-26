@@ -758,7 +758,7 @@ function showResult(url, seed = null) {
 
     // Category C: Extract Colors when image is loaded
     // Need to handle CORS if loading from external URL
-    img.crossOrigin = "Anonymous";
+    
     img.onload = () => extractColors(img);
 }
 
@@ -1078,4 +1078,5 @@ window.remixImage = remixImage;
 window.downloadFromModal = async function () {
     const url = document.getElementById('result-image').src;
     if (url) await downloadImageDirect(url);
+
 };
