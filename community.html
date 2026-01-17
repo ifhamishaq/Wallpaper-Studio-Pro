@@ -1,0 +1,355 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Browse stunning AI-generated wallpapers from the Wallpaper Studio Pro community">
+    <title>Community Gallery - Wallpaper Studio Pro</title>
+
+    <!-- Favicon -->
+    <link rel="icon"
+        href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🎨</text></svg>">
+
+    <!-- Load Google Font -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&display=swap" rel="stylesheet">
+
+    <!-- Load Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <!-- Load Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+
+    <!-- Custom Styles -->
+    <link rel="stylesheet" href="style.css">
+
+    <!-- Load Supabase Client -->
+    <script type="module" src="supabase-client.js"></script>
+
+    <!-- Load Authentication UI -->
+    <script type="module" src="auth.js"></script>
+</head>
+
+<body class="bg-bg-dark text-white min-h-screen">
+    <!-- Authentication Modal (same as index.html) -->
+    <div id="auth-modal" class="fixed inset-0 z-50 hidden items-center justify-center bg-black/50 backdrop-blur-sm">
+        <div class="glass-primary w-full max-w-md mx-4 p-8 rounded-3xl relative">
+            <button onclick="closeAuthModal()" class="absolute top-4 right-4 btn-icon">
+                <i data-lucide="x" class="w-5 h-5"></i>
+            </button>
+
+            <div class="flex gap-4 mb-6">
+                <button id="login-tab" onclick="switchAuthTab('login')"
+                    class="flex-1 py-2 text-lg font-semibold border-b-2 border-white transition">
+                    Sign In
+                </button>
+                <button id="signup-tab" onclick="switchAuthTab('signup')"
+                    class="flex-1 py-2 text-lg font-semibold border-b-2 border-transparent text-gray-400 transition">
+                    Sign Up
+                </button>
+            </div>
+
+            <form id="login-form" class="space-y-4">
+                <div>
+                    <label for="login-email" class="block text-sm text-gray-400 mb-2">Email</label>
+                    <input type="email" id="login-email" required placeholder="your@email.com"
+                        class="w-full px-4 py-3 rounded-xl bg-white/5 border border-white/10 focus:border-white/30 focus:outline-none transition">
+                </div>
+                <div>
+                    <label for="login-password" class="block text-sm text-gray-400 mb-2">Password</label>
+                    <input type="password" id="login-password" required placeholder="••••••••"
+                        class="w-full px-4 py-3 rounded-xl bg-white/5 border border-white/10 focus:border-white/30 focus:outline-none transition">
+                </div>
+                <button type="submit" class="btn-primary w-full py-3 text-lg">Sign In</button>
+            </form>
+
+            <form id="signup-form" class="space-y-4 hidden">
+                <div>
+                    <label for="signup-username" class="block text-sm text-gray-400 mb-2">Username</label>
+                    <input type="text" id="signup-username" required placeholder="coolguy123"
+                        class="w-full px-4 py-3 rounded-xl bg-white/5 border border-white/10 focus:border-white/30 focus:outline-none transition">
+                </div>
+                <div>
+                    <label for="signup-email" class="block text-sm text-gray-400 mb-2">Email</label>
+                    <input type="email" id="signup-email" required placeholder="your@email.com"
+                        class="w-full px-4 py-3 rounded-xl bg-white/5 border border-white/10 focus:border-white/30 focus:outline-none transition">
+                </div>
+                <div>
+                    <label for="signup-password" class="block text-sm text-gray-400 mb-2">Password</label>
+                    <input type="password" id="signup-password" required minlength="6" placeholder="••••••••"
+                        class="w-full px-4 py-3 rounded-xl bg-white/5 border border-white/10 focus:border-white/30 focus:outline-none transition">
+                </div>
+                <button type="submit" class="btn-primary w-full py-3 text-lg">Create Account</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Header -->
+    <header class="sticky top-0 z-40 glass-secondary border-b border-white/10">
+        <div class="container mx-auto px-4 py-4 flex items-center justify-between">
+            <div class="flex items-center gap-4">
+                <a href="index.html" class="text-2xl font-bold">🎨 Wallpaper Studio Pro</a>
+                <span class="text-sm text-gray-400">Community</span>
+            </div>
+
+            <div class="flex items-center gap-4">
+                <a href="index.html" class="btn-secondary px-4 py-2">
+                    <i data-lucide="wand-2" class="w-4 h-4 inline mr-2"></i>
+                    Create
+                </a>
+                <div id="user-indicator"></div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Filters -->
+    <div class="container mx-auto px-4 py-6">
+        <div class="flex gap-2 overflow-x-auto pb-2">
+            <button onclick="filterGallery('popular')" id="filter-popular"
+                class="filter-btn active px-4 py-2 rounded-full bg-white text-black font-semibold transition">
+                🔥 Popular
+            </button>
+            <button onclick="filterGallery('latest')" id="filter-latest"
+                class="filter-btn px-4 py-2 rounded-full bg-white/10 hover:bg-white/20 transition">
+                ⚡ Latest
+            </button>
+            <button onclick="filterGallery('cyberpunk')" id="filter-cyberpunk"
+                class="filter-btn px-4 py-2 rounded-full bg-white/10 hover:bg-white/20 transition">
+                🌃 Cyber City
+            </button>
+            <button onclick="filterGallery('nature')" id="filter-nature"
+                class="filter-btn px-4 py-2 rounded-full bg-white/10 hover:bg-white/20 transition">
+                🌲 Nature
+            </button>
+            <button onclick="filterGallery('fantasy')" id="filter-fantasy"
+                class="filter-btn px-4 py-2 rounded-full bg-white/10 hover:bg-white/20 transition">
+                ✨ Fantasy
+            </button>
+        </div>
+    </div>
+
+    <!-- Gallery Grid -->
+    <main class="container mx-auto px-4 pb-20">
+        <div id="gallery-grid" class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+            <!-- Wallpapers will be loaded here -->
+        </div>
+
+        <!-- Loading Indicator -->
+        <div id="loading-indicator" class="text-center py-8 hidden">
+            <div class="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-white"></div>
+            <p class="text-gray-400 mt-2">Loading more...</p>
+        </div>
+
+        <!-- Empty State -->
+        <div id="empty-state" class="text-center py-20 hidden">
+            <div class="text-6xl mb-4">🎨</div>
+            <h3 class="text-2xl font-bold mb-2">No wallpapers yet</h3>
+            <p class="text-gray-400 mb-6">Be the first to share your creation!</p>
+            <a href="index.html" class="btn-primary inline-block px-6 py-3">
+                Create Wallpaper
+            </a>
+        </div>
+    </main>
+
+    <!-- Wallpaper Detail Modal -->
+    <div id="detail-modal" class="fixed inset-0 z-50 hidden items-center justify-center bg-black/80 backdrop-blur-sm">
+        <div class="glass-primary max-w-6xl w-full mx-4 h-[90vh] rounded-3xl overflow-hidden flex flex-col md:flex-row">
+            <!-- Image Side -->
+            <div class="flex-1 bg-black flex items-center justify-center p-4">
+                <img id="detail-image" src="" alt="" class="max-w-full max-h-full object-contain rounded-xl">
+            </div>
+
+            <!-- Info Side -->
+            <div class="w-full md:w-96 flex flex-col p-6 overflow-y-auto">
+                <button onclick="closeDetailModal()" class="self-end btn-icon mb-4">
+                    <i data-lucide="x" class="w-5 h-5"></i>
+                </button>
+
+                <h2 id="detail-title" class="text-2xl font-bold mb-2"></h2>
+                <p id="detail-description" class="text-gray-400 mb-4"></p>
+
+                <div class="flex items-center gap-3 mb-6 pb-6 border-b border-white/10">
+                    <img id="detail-avatar" src="" alt="" class="w-10 h-10 rounded-full bg-white/10">
+                    <div>
+                        <div id="detail-username" class="font-semibold"></div>
+                        <div id="detail-date" class="text-sm text-gray-400"></div>
+                    </div>
+                </div>
+
+                <div class="space-y-2 mb-6">
+                    <div class="flex justify-between text-sm">
+                        <span class="text-gray-400">Genre:</span>
+                        <span id="detail-genre" class="font-semibold"></span>
+                    </div>
+                    <div class="flex justify-between text-sm">
+                        <span class="text-gray-400">Style:</span>
+                        <span id="detail-style" class="font-semibold"></span>
+                    </div>
+                    <div class="flex justify-between text-sm">
+                        <span class="text-gray-400">Views:</span>
+                        <span id="detail-views"></span>
+                    </div>
+                </div>
+
+                <div class="flex gap-2 mt-auto">
+                    <button id="detail-download-btn" class="btn-primary flex-1">
+                        <i data-lucide="download" class="w-4 h-4 inline mr-2"></i>
+                        Download
+                    </button>
+                    <button id="detail-like-btn" class="btn-secondary p-3">
+                        <i data-lucide="heart" class="w-5 h-5"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Community Script -->
+    <script type="module">
+        import { fetchWallpapers, toggleLike, getCurrentUser } from './supabase-client.js';
+
+        let currentPage = 0;
+        let currentFilter = 'popular';
+        let isLoading = false;
+        let hasMore = true;
+
+        // Load wallpapers
+        async function loadWallpapers(reset = false) {
+            if (isLoading || (!hasMore && !reset)) return;
+
+            isLoading = true;
+            if (reset) {
+                currentPage = 0;
+                hasMore = true;
+            }
+
+            document.getElementById('loading-indicator').classList.remove('hidden');
+
+            const orderBy = currentFilter === 'latest' ? 'created_at' : 'likes_count';
+            const { data, error } = await fetchWallpapers({
+                page: currentPage,
+                limit: 20,
+                orderBy: orderBy,
+                ascending: false
+            });
+
+            document.getElementById('loading-indicator').classList.add('hidden');
+
+            if (error) {
+                console.error('Error loading wallpapers:', error);
+                return;
+            }
+
+            if (reset) {
+                document.getElementById('gallery-grid').innerHTML = '';
+            }
+
+            if (data.length === 0) {
+                if (currentPage === 0) {
+                    document.getElementById('empty-state').classList.remove('hidden');
+                }
+                hasMore = false;
+                isLoading = false;
+                return;
+            }
+
+            document.getElementById('empty-state').classList.add('hidden');
+            renderWallpapers(data);
+
+            currentPage++;
+            isLoading = false;
+        }
+
+        // Render wallpapers
+        function renderWallpapers(wallpapers) {
+            const grid = document.getElementById('gallery-grid');
+
+            wallpapers.forEach(wp => {
+                const card = document.createElement('div');
+                card.className = 'group relative aspect-[9/16] rounded-2xl overflow-hidden cursor-pointer glass-secondary hover:scale-105 transition-transform';
+                card.onclick = () => showDetailModal(wp);
+
+                card.innerHTML = `
+                    <img src="${wp.thumbnail_url || wp.image_url}" 
+                         alt="${wp.title}" 
+                         class="w-full h-full object-cover">
+                    
+                    <div class="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity">
+                        <div class="absolute bottom-0 left-0 right-0 p-4">
+                            <div class="text-xs font-bold bg-purple-500 px-2 py-1 rounded-full inline-block mb-2">
+                                ${wp.genre || 'Unknown'}
+                            </div>
+                            <h3 class="font-bold text-lg mb-1">${wp.title}</h3>
+                            <div class="flex items-center gap-2 text-sm text-gray-300">
+                                <span>❤️ ${wp.likes_count || 0}</span>
+                                <span>👁️ ${wp.views_count || 0}</span>
+                            </div>
+                        </div>
+                    </div>
+                `;
+
+                grid.appendChild(card);
+            });
+
+            lucide.createIcons();
+        }
+
+        // Show detail modal
+        window.showDetailModal = function (wallpaper) {
+            document.getElementById('detail-modal').classList.remove('hidden');
+            document.getElementById('detail-modal').classList.add('flex');
+
+            document.getElementById('detail-image').src = wallpaper.image_url;
+            document.getElementById('detail-title').textContent = wallpaper.title;
+            document.getElementById('detail-description').textContent = wallpaper.description || 'No description';
+            document.getElementById('detail-username').textContent = wallpaper.profiles?.username || 'Anonymous';
+            document.getElementById('detail-genre').textContent = wallpaper.genre || 'Unknown';
+            document.getElementById('detail-style').textContent = wallpaper.style || 'Unknown';
+            document.getElementById('detail-views').textContent = wallpaper.views_count || 0;
+            document.getElementById('detail-date').textContent = new Date(wallpaper.created_at).toLocaleDateString();
+
+            // Download button
+            document.getElementById('detail-download-btn').onclick = () => {
+                const link = document.createElement('a');
+                link.href = wallpaper.image_url;
+                link.download = `${wallpaper.title}.png`;
+                link.click();
+            };
+        };
+
+        // Close detail modal
+        window.closeDetailModal = function () {
+            document.getElementById('detail-modal').classList.add('hidden');
+            document.getElementById('detail-modal').classList.remove('flex');
+        };
+
+        // Filter gallery
+        window.filterGallery = function (filter) {
+            currentFilter = filter;
+
+            // Update UI
+            document.querySelectorAll('.filter-btn').forEach(btn => {
+                btn.classList.remove('active', 'bg-white', 'text-black');
+                btn.classList.add('bg-white/10');
+            });
+            document.getElementById(`filter-${filter}`).classList.add('active', 'bg-white', 'text-black');
+            document.getElementById(`filter-${filter}`).classList.remove('bg-white/10');
+
+            // Reload
+            loadWallpapers(true);
+        };
+
+        // Infinite scroll
+        window.addEventListener('scroll', () => {
+            if ((window.innerHeight + window.scrollY) >= document.body.offsetHeight - 500) {
+                loadWallpapers();
+            }
+        });
+
+        // Initial load
+        loadWallpapers();
+        lucide.createIcons();
+    </script>
+</body>
+
+</html>
