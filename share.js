@@ -8,9 +8,7 @@ import { uploadWallpaper, getCurrentUser } from './supabase-client.js';
 window.currentWallpaperData = null;
 
 // Share current wallpaper to community
-window.shareToCommun
-
-ity = async function () {
+window.shareToCommunity = async function () {
     const user = await getCurrentUser();
 
     // Check if user is logged in
