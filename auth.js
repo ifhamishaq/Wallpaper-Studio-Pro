@@ -110,9 +110,9 @@ function updateUserUI(user) {
         if (userIndicator) {
             userIndicator.innerHTML = `
                 <div class="flex items-center gap-2">
-                    <span class="hidden sm:inline text-sm">${user.email}</span>
+                    <span class="hidden sm:inline text-sm text-white">${user.email}</span>
                     <button onclick="handleSignOut()" 
-                            class="btn-secondary btn-sm px-3 py-1">
+                            class="px-4 py-2 rounded-full bg-white/10 hover:bg-white/20 border border-white/20 text-white font-semibold transition">
                         Sign Out
                     </button>
                 </div>
@@ -123,7 +123,7 @@ function updateUserUI(user) {
         if (userIndicator) {
             userIndicator.innerHTML = `
                 <button onclick="openAuthModal()" 
-                        class="btn-secondary btn-sm px-4 py-2">
+                        class="px-4 py-2 rounded-full bg-white text-black font-semibold hover:bg-gray-200 transition">
                     Sign In
                 </button>
             `;
@@ -142,6 +142,7 @@ window.handleSignOut = async function () {
 
 // Listen to auth state changes
 onAuthStateChange((event, session) => {
+    console.log('Auth state changed:', event, session);
     if (event === 'SIGNED_IN') {
         updateUserUI(session.user);
     } else if (event === 'SIGNED_OUT') {
@@ -151,6 +152,27 @@ onAuthStateChange((event, session) => {
 
 // Initialize auth UI on page load
 (async function initAuth() {
-    const user = await getCurrentUser();
-    updateUserUI(user);
+    try {
+        const user = await getCurrentUser();
+        console.log('Current user on init:', user);
+        updateUserUI(user);
+    } catch (error) {
+        console.error('Auth init error:', error);
+        // If there's an error, still show the sign in button
+        updateUserUI(null);
+    }
 })();
+
+// Also ensure user indicator exists
+window.addEventListener('DOMContentLoaded', () => {
+    const userIndicator = document.getElementById('user-indicator');
+    if (userIndicator && !userIndicator.innerHTML.trim()) {
+        // If empty, show sign in button
+        userIndicator.innerHTML = `
+            <button onclick="openAuthModal()" 
+                    class="btn-secondary btn-sm px-4 py-2">
+                Sign In
+            </button>
+        `;
+    }
+});
