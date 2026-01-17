@@ -176,3 +176,28 @@ window.addEventListener('DOMContentLoaded', () => {
         `;
     }
 });
+
+// Handle email verification redirect
+window.addEventListener('hashchange', handleEmailVerification);
+window.addEventListener('load', handleEmailVerification);
+
+async function handleEmailVerification() {
+    const hash = window.location.hash;
+
+    // Check if this is an email verification redirect
+    if (hash.includes('access_token') && hash.includes('type=signup')) {
+        console.log('Email verification detected');
+
+        // Wait a moment for Supabase to process
+        setTimeout(async () => {
+            const user = await getCurrentUser();
+            if (user) {
+                updateUserUI(user);
+                alert('✅ Email verified! Welcome to Wallpaper Studio Pro!');
+
+                // Clean up URL
+                window.history.replaceState({}, document.title, window.location.pathname);
+            }
+        }, 1000);
+    }
+}
