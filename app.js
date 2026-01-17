@@ -884,6 +884,17 @@ function showResult(url, seed = null) {
     document.getElementById('lock-screen-overlay').classList.add('hidden');
     modal.classList.remove('hidden');
 
+    // Store current wallpaper data for sharing
+    window.currentWallpaperData = {
+        imageUrl: url,
+        genre: GENRES[state.activeGenreIndex]?.name || 'Unknown',
+        style: STYLES[state.activeStyleIndex]?.name || 'Unknown',
+        prompt: state.currentPrompt || '',
+        seed: seed,
+        width: state.isDesktopMode ? 1920 : 1080,
+        height: state.isDesktopMode ? 1080 : 1920
+    };
+
     // Category C: Extract Colors when image is loaded
     // Need to handle CORS if loading from external URL
 
