@@ -15,6 +15,28 @@ export const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 // AUTHENTICATION HELPERS
 // =============================================
 
+// Sign up with email and password
+export async function signUp(email, password, username) {
+    try {
+        const { data, error } = await supabase.auth.signUp({
+            email,
+            password,
+            options: {
+                data: {
+                    username: username  // Stored in user metadata
+                }
+            }
+        });
+
+        if (error) throw error;
+
+        // Database trigger will automatically create the profile!
+        return { data, error: null };
+    } catch (error) {
+        console.error('Signup error:', error);
+        return { data: null, error };
+    }
+}
 
 // Sign in with email and password
 export async function signIn(email, password) {
@@ -290,4 +312,3 @@ export function onAuthStateChange(callback) {
 
     return subscription;
 }
-
