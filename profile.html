@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Profile - Wallpaper Studio Pro</title>
+
+    <link rel="icon"
+        href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🎨</text></svg>">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&display=swap" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <link rel="stylesheet" href="style.css">
+
+    <script type="module" src="supabase-client.js"></script>
+    <script type="module" src="auth.js"></script>
+</head>
+
+<body class="bg-black text-white min-h-screen">
+    <!-- Header -->
+    <header class="sticky top-0 z-40 glass-secondary border-b border-white/10">
+        <div class="container mx-auto px-4 py-4 flex items-center justify-between">
+            <div class="flex items-center gap-4">
+                <a href="index.html" class="text-2xl font-bold">🎨 Wallpaper Studio Pro</a>
+                <span class="text-sm text-gray-400">Profile</span>
+            </div>
+
+            <div class="flex items-center gap-4">
+                <a href="community.html" class="btn-secondary px-4 py-2">
+                    <i data-lucide="users" class="w-4 h-4 inline mr-2"></i>
+                    Community
+                </a>
+                <a href="index.html" class="btn-secondary px-4 py-2">
+                    <i data-lucide="wand-2" class="w-4 h-4 inline mr-2"></i>
+                    Create
+                </a>
+            </div>
+        </div>
+    </header>
+
+    <!-- Profile Content -->
+    <main class="container mx-auto px-4 py-12 max-w-4xl">
+        <!-- Profile Header -->
+        <div class="glass-primary rounded-3xl p-8 mb-8">
+            <div class="flex flex-col md:flex-row items-center gap-8">
+                <!-- Avatar -->
+                <div class="relative">
+                    <img id="avatar-preview" src="https://via.placeholder.com/150/333/fff?text=👤" alt="Profile"
+                        class="w-32 h-32 rounded-full bg-white/10 object-cover">
+                    <label for="avatar-upload"
+                        class="absolute bottom-0 right-0 btn-icon cursor-pointer bg-purple-500 hover:bg-purple-600">
+                        <i data-lucide="camera" class="w-4 h-4"></i>
+                    </label>
+                    <input type="file" id="avatar-upload" accept="image/*" class="hidden">
+                </div>
+
+                <!-- Info -->
+                <div class="flex-1 text-center md:text-left">
+                    <h1 id="profile-username" class="text-3xl font-bold mb-2">Loading...</h1>
+                    <p id="profile-email" class="text-gray-400 mb-4"></p>
+
+                    <div class="flex gap-4 justify-center md:justify-start text-sm">
+                        <div>
+                            <div id="wallpaper-count" class="text-2xl font-bold">0</div>
+                            <div class="text-gray-400">Wallpapers</div>
+                        </div>
+                        <div>
+                            <div id="likes-count" class="text-2xl font-bold">0</div>
+                            <div class="text-gray-400">Likes</div>
+                        </div>
+                        <div>
+                            <div id="views-count" class="text-2xl font-bold">0</div>
+                            <div class="text-gray-400">Views</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Edit Profile -->
+        <div class="glass-primary rounded-3xl p-8 mb-8">
+            <h2 class="text-2xl font-bold mb-6">Edit Profile</h2>
+
+            <div class="space-y-4">
+                <div>
+                    <label class="block text-sm text-gray-400 mb-2">Username</label>
+                    <input type="text" id="edit-username"
+                        class="w-full px-4 py-3 rounded-xl bg-white/5 border border-white/10 focus:border-white/30 focus:outline-none transition">
+                </div>
+
+                <div>
+                    <label class="block text-sm text-gray-400 mb-2">Display Name</label>
+                    <input type="text" id="edit-display-name"
+                        class="w-full px-4 py-3 rounded-xl bg-white/5 border border-white/10 focus:border-white/30 focus:outline-none transition">
+                </div>
+
+                <div>
+                    <label class="block text-sm text-gray-400 mb-2">Bio</label>
+                    <textarea id="edit-bio" rows="3"
+                        class="w-full px-4 py-3 rounded-xl bg-white/5 border border-white/10 focus:border-white/30 focus:outline-none transition"></textarea>
+                </div>
+
+                <button id="save-profile-btn" class="btn-primary px-6 py-3">
+                    Save Changes
+                </button>
+            </div>
+        </div>
+
+        <!-- My Wallpapers -->
+        <div class="glass-primary rounded-3xl p-8">
+            <h2 class="text-2xl font-bold mb-6">My Wallpapers</h2>
+            <div id="my-wallpapers-grid" class="grid grid-cols-2 md:grid-cols-3 gap-4">
+                <!-- Wallpapers will be loaded here -->
+            </div>
+            <div id="no-wallpapers" class="text-center py-12 text-gray-400 hidden">
+                <i data-lucide="image" class="w-12 h-12 mx-auto mb-4 opacity-50"></i>
+                <p>No wallpapers shared yet</p>
+                <a href="index.html" class="btn-primary inline-block mt-4 px-6 py-3">
+                    Create Your First
+                </a>
+            </div>
+        </div>
+    </main>
+
+    <script type="module">
+        import { getCurrentUser, supabase } from './supabase-client.js';
+
+        let currentUser = null;
+
+        async function loadProfile() {
+            currentUser = await getCurrentUser();
+            if (!currentUser) {
+                window.location.href = 'index.html';
+                return;
+            }
+
+            // Load profile data
+            const { data: profile } = await supabase
+                .from('profiles')
+                .select('*')
+                .eq('id', currentUser.id)
+                .single();
+
+            if (profile) {
+                document.getElementById('profile-username').textContent = profile.username || 'User';
+                document.getElementById('profile-email').textContent = currentUser.email;
+                document.getElementById('edit-username').value = profile.username || '';
+                document.getElementById('edit-display-name').value = profile.display_name || '';
+                document.getElementById('edit-bio').value = profile.bio || '';
+
+                if (profile.avatar_url) {
+                    document.getElementById('avatar-preview').src = profile.avatar_url;
+                }
+            }
+
+            // Load statistics
+            const { data: wallpapers } = await supabase
+                .from('wallpapers')
+                .select('*, likes(count), views_count')
+                .eq('user_id', currentUser.id);
+
+            if (wallpapers) {
+                document.getElementById('wallpaper-count').textContent = wallpapers.length;
+                const totalViews = wallpapers.reduce((sum, w) => sum + (w.views_count || 0), 0);
+                document.getElementById('views-count').textContent = totalViews;
+
+                // Render wallpapers
+                renderMyWallpapers(wallpapers);
+            }
+        }
+
+        function renderMyWallpapers(wallpapers) {
+            const grid = document.getElementById('my-wallpapers-grid');
+            const noWallpapers = document.getElementById('no-wallpapers');
+
+            if (wallpapers.length === 0) {
+                noWallpapers.classList.remove('hidden');
+                return;
+            }
+
+            wallpapers.forEach(wp => {
+                const card = document.createElement('div');
+                card.className = 'aspect-[9/16] rounded-xl overflow-hidden glass-secondary hover:scale-105 transition-transform cursor-pointer';
+                card.innerHTML = `
+                    <img src="${wp.thumbnail_url || wp.image_url}" 
+                         alt="${wp.title}" 
+                         class="w-full h-full object-cover">
+                `;
+                card.onclick = () => window.open(wp.image_url, '_blank');
+                grid.appendChild(card);
+            });
+        }
+
+        // Save profile
+        document.getElementById('save-profile-btn').addEventListener('click', async () => {
+            const btn = document.getElementById('save-profile-btn');
+            btn.textContent = 'Saving...';
+            btn.disabled = true;
+
+            const { error } = await supabase
+                .from('profiles')
+                .update({
+                    username: document.getElementById('edit-username').value,
+                    display_name: document.getElementById('edit-display-name').value,
+                    bio: document.getElementById('edit-bio').value
+                })
+                .eq('id', currentUser.id);
+
+            if (error) {
+                alert('Failed to save: ' + error.message);
+            } else {
+                alert('✅ Profile updated!');
+                loadProfile();
+            }
+
+            btn.textContent = 'Save Changes';
+            btn.disabled = false;
+        });
+
+        // Avatar upload (simplified - would need storage setup)
+        document.getElementById('avatar-upload').addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    document.getElementById('avatar-preview').src = e.target.result;
+                    alert('Avatar upload feature coming soon! For now, just previewing locally.');
+                };
+                reader.readAsDataURL(file);
+            }
+        });
+
+        loadProfile();
+        lucide.createIcons();
+    </script>
+</body>
+
+</html>

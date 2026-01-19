@@ -27,24 +27,6 @@
     <!-- Load Lucide Icons -->
     <script src="https://unpkg.com/lucide@latest"></script>
 
-    <!-- Custom Styles -->
-    <link rel="stylesheet" href="style.css">
-
-    <!-- Load Config (Genres, Styles, etc.) -->
-    <script type="module" src="config.js"></script>
-
-    <!-- Load Supabase Client -->
-    <script type="module" src="supabase-client.js"></script>
-
-    <!-- Load Authentication UI -->
-    <script type="module" src="auth.js"></script>
-
-    <!-- Load Share to Community -->
-    <script type="module" src="share.js"></script>
-
-    <!-- Load Main App Logic -->
-    <script type="module" src="app.js" defer></script>
-
     <!-- Tailwind Config -->
     <script>
         tailwind.config = {
@@ -82,75 +64,6 @@
 </head>
 
 <body class="font-sans min-h-screen flex flex-col items-center justify-center p-4">
-    <!-- Authentication Modal -->
-    <div id="auth-modal" class="fixed inset-0 z-50 hidden items-center justify-center bg-black/50 backdrop-blur-sm">
-        <div class="glass-primary w-full max-w-md mx-4 p-8 rounded-3xl relative">
-            <!-- Close Button -->
-            <button onclick="closeAuthModal()" class="absolute top-4 right-4 btn-icon"
-                aria-label="Close authentication modal">
-                <i data-lucide="x" class="w-5 h-5"></i>
-            </button>
-
-            <!-- Tabs -->
-            <div class="flex gap-4 mb-6">
-                <button id="login-tab" onclick="switchAuthTab('login')"
-                    class="flex-1 py-2 text-lg font-semibold border-b-2 border-white transition">
-                    Sign In
-                </button>
-                <button id="signup-tab" onclick="switchAuthTab('signup')"
-                    class="flex-1 py-2 text-lg font-semibold border-b-2 border-transparent text-gray-400 transition">
-                    Sign Up
-                </button>
-            </div>
-
-            <!-- Login Form -->
-            <form id="login-form" class="space-y-4">
-                <div>
-                    <label for="login-email" class="block text-sm text-gray-400 mb-2">Email</label>
-                    <input type="email" id="login-email" required placeholder="your@email.com"
-                        class="w-full px-4 py-3 rounded-xl bg-white/5 border border-white/10 focus:border-white/30 focus:outline-none transition">
-                </div>
-                <div>
-                    <label for="login-password" class="block text-sm text-gray-400 mb-2">Password</label>
-                    <input type="password" id="login-password" required placeholder="••••••••"
-                        class="w-full px-4 py-3 rounded-xl bg-white/5 border border-white/10 focus:border-white/30 focus:outline-none transition">
-                </div>
-                <button type="submit" class="btn-primary w-full py-3 text-lg">
-                    Sign In
-                </button>
-                <p class="text-xs text-gray-500 text-center">
-                    By signing in, you agree to our Terms of Service
-                </p>
-            </form>
-
-            <!-- Signup Form (hidden by default) -->
-            <form id="signup-form" class="space-y-4 hidden">
-                <div>
-                    <label for="signup-username" class="block text-sm text-gray-400 mb-2">Username</label>
-                    <input type="text" id="signup-username" required placeholder="coolguy123"
-                        class="w-full px-4 py-3 rounded-xl bg-white/5 border border-white/10 focus:border-white/30 focus:outline-none transition">
-                </div>
-                <div>
-                    <label for="signup-email" class="block text-sm text-gray-400 mb-2">Email</label>
-                    <input type="email" id="signup-email" required placeholder="your@email.com"
-                        class="w-full px-4 py-3 rounded-xl bg-white/5 border border-white/10 focus:border-white/30 focus:outline-none transition">
-                </div>
-                <div>
-                    <label for="signup-password" class="block text-sm text-gray-400 mb-2">Password</label>
-                    <input type="password" id="signup-password" required minlength="6" placeholder="••••••••"
-                        class="w-full px-4 py-3 rounded-xl bg-white/5 border border-white/10 focus:border-white/30 focus:outline-none transition">
-                    <p class="text-xs text-gray-500 mt-1">At least 6 characters</p>
-                </div>
-                <button type="submit" class="btn-primary w-full py-3 text-lg">
-                    Create Account
-                </button>
-                <p class="text-xs text-gray-500 text-center">
-                    By signing up, you agree to our Terms of Service
-                </p>
-            </form>
-        </div>
-    </div>
-
     <!-- WebGL Background -->
     <canvas id="webgl-canvas" aria-hidden="true"></canvas>
 
@@ -173,18 +86,6 @@
             <span id="favorites-badge"
                 class="hidden absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full w-4 h-4 flex items-center justify-center">0</span>
         </button>
-
-        <!-- Community Gallery Link -->
-        <a href="community.html"
-            class="btn-haptic p-2 rounded-full hover:bg-white/10 transition backdrop-blur-md bg-white/5"
-            title="Browse Community Gallery" aria-label="Open community gallery">
-            <i data-lucide="users" class="text-white w-6 h-6"></i>
-        </a>
-
-        <!-- User Indicator / Sign In Button -->
-        <div id="user-indicator">
-            <!-- Populated by auth.js -->
-        </div>
     </header>
 
     <!-- Main Split Interface -->
@@ -194,19 +95,18 @@
             <!-- Top Half: Genre -->
             <div class="flex-1 relative overflow-hidden group">
                 <div class="absolute inset-0 carousel-overlay z-10 pointer-events-none"></div>
-                <div id="genre-track" class="carousel-track h-full" role="region" aria-label="Genre selection"
-                    aria-live="polite"></div>
+                <div id="genre-track" class="carousel-track h-full" role="region" aria-label="Genre selection"></div>
 
                 <!-- Controls -->
                 <button onclick="prevSlide('genre')"
                     class="btn-haptic absolute left-4 top-1/2 -translate-y-1/2 z-20 p-2 bg-black/30 rounded-full backdrop-blur-sm hover:bg-white/20 transition opacity-0 group-hover:opacity-100"
-                    aria-label="Previous genre. Use left arrow key" aria-keyshortcuts="ArrowLeft">
-                    <i data-lucide="chevron-left" class="w-6 h-6 text-white" aria-hidden="true"></i>
+                    aria-label="Previous genre">
+                    <i data-lucide="chevron-left" class="w-6 h-6 text-white"></i>
                 </button>
                 <button onclick="nextSlide('genre')"
                     class="btn-haptic absolute right-4 top-1/2 -translate-y-1/2 z-20 p-2 bg-black/30 rounded-full backdrop-blur-sm hover:bg-white/20 transition opacity-0 group-hover:opacity-100"
-                    aria-label="Next genre. Use right arrow key" aria-keyshortcuts="ArrowRight">
-                    <i data-lucide="chevron-right" class="w-6 h-6 text-white" aria-hidden="true"></i>
+                    aria-label="Next genre">
+                    <i data-lucide="chevron-right" class="w-6 h-6 text-white"></i>
                 </button>
                 <div class="absolute bottom-6 w-full text-center z-20 pb-4">
                     <span id="genre-label" class="text-3xl font-bold text-white drop-shadow-lg"
@@ -222,19 +122,18 @@
             <!-- Bottom Half: Style -->
             <div class="flex-1 relative overflow-hidden group">
                 <div class="absolute inset-0 carousel-overlay z-10 pointer-events-none"></div>
-                <div id="style-track" class="carousel-track h-full" role="region" aria-label="Style selection"
-                    aria-live="polite"></div>
+                <div id="style-track" class="carousel-track h-full" role="region" aria-label="Style selection"></div>
 
                 <!-- Controls -->
                 <button onclick="prevSlide('style')"
                     class="btn-haptic absolute left-4 top-1/2 -translate-y-1/2 z-20 p-2 bg-black/30 rounded-full backdrop-blur-sm hover:bg-white/20 transition opacity-0 group-hover:opacity-100"
-                    aria-label="Previous style. Use up arrow key" aria-keyshortcuts="ArrowUp">
-                    <i data-lucide="chevron-left" class="w-6 h-6 text-white" aria-hidden="true"></i>
+                    aria-label="Previous style">
+                    <i data-lucide="chevron-left" class="w-6 h-6 text-white"></i>
                 </button>
                 <button onclick="nextSlide('style')"
                     class="btn-haptic absolute right-4 top-1/2 -translate-y-1/2 z-20 p-2 bg-black/30 rounded-full backdrop-blur-sm hover:bg-white/20 transition opacity-0 group-hover:opacity-100"
-                    aria-label="Next style. Use down arrow key" aria-keyshortcuts="ArrowDown">
-                    <i data-lucide="chevron-right" class="w-6 h-6 text-white" aria-hidden="true"></i>
+                    aria-label="Next style">
+                    <i data-lucide="chevron-right" class="w-6 h-6 text-white"></i>
                 </button>
                 <div class="absolute top-6 w-full text-center z-20 pt-4">
                     <span id="style-label" class="text-3xl font-bold text-white drop-shadow-lg"
@@ -286,7 +185,7 @@
     <!-- Control Area -->
     <div class="w-full max-w-md mt-6 flex flex-col items-center gap-4 z-10">
 
-
+      
         <!-- Generate Button -->
         <button id="generate-button"
             class="btn-haptic w-full bg-white text-black font-bold text-lg py-4 rounded-full shadow-lg hover:scale-[1.02] active:scale-[0.98] transition-transform flex items-center justify-center gap-2"
@@ -302,7 +201,7 @@
             <i data-lucide="dice-5" class="w-5 h-5"></i>
             <span>Surprise Me</span>
         </button>
-        <!-- Prompt Editor Toggle -->
+  <!-- Prompt Editor Toggle -->
         <div class="w-full">
             <div class="flex items-center justify-center gap-2 mb-2">
                 <button onclick="togglePromptEditor()"
@@ -349,29 +248,6 @@
                 <input type="range" id="steps-input" min="1" max="8" value="4" oninput="updateSteps(this.value)"
                     class="w-full" aria-label="Quality steps">
             </div>
-
-            <!-- Performance Mode Selector -->
-            <div>
-                <label class="text-xs text-gray-400 block mb-2">Performance Mode</label>
-                <div class="flex gap-2">
-                    <button onclick="setPerformanceMode('low')" id="perf-low"
-                        class="flex-1 py-2 px-3 text-xs rounded-lg bg-white/10 hover:bg-white/20 transition border border-white/10">
-                        <div class="font-semibold">Low</div>
-                        <div class="text-[10px] text-gray-500">Minimal</div>
-                    </button>
-                    <button onclick="setPerformanceMode('medium')" id="perf-medium"
-                        class="flex-1 py-2 px-3 text-xs rounded-lg bg-white/10 hover:bg-white/20 transition border border-white/10">
-                        <div class="font-semibold">Medium</div>
-                        <div class="text-[10px] text-gray-500">Balanced</div>
-                    </button>
-                    <button onclick="setPerformanceMode('high')" id="perf-high"
-                        class="flex-1 py-2 px-3 text-xs rounded-lg bg-white/10 hover:bg-white/20 transition border border-white/10">
-                        <div class="font-semibold">High</div>
-                        <div class="text-[10px] text-gray-500">All FX</div>
-                    </button>
-                </div>
-                <p class="text-[10px] text-gray-500 mt-1">Current: <span id="current-perf-mode">Auto</span></p>
-            </div>
         </div>
 
         <!-- Keyboard Shortcuts Info -->
@@ -394,7 +270,7 @@
     <div id="history-drawer"
         class="fixed top-0 right-0 h-full w-full md:w-1/2 bg-[#0a0a0a]/95 backdrop-blur-2xl border-l border-white/10 z-50 transform translate-x-full transition-transform duration-500 cubic-bezier(0.32, 0.72, 0, 1) shadow-2xl overflow-hidden flex flex-col"
         role="dialog" aria-label="History drawer">
-
+        
         <!-- Header -->
         <div class="p-6 pb-2 border-b border-white/10 bg-black/20 z-10">
             <div class="flex justify-between items-start mb-4">
@@ -403,8 +279,7 @@
                     <p class="text-sm text-gray-400 mt-0.5">Your generated masterpieces</p>
                 </div>
                 <div class="flex gap-2">
-                    <button onclick="clearHistory()"
-                        class="btn-haptic p-3 text-red-400 hover:bg-red-500/10 rounded-xl transition"
+                    <button onclick="clearHistory()" class="btn-haptic p-3 text-red-400 hover:bg-red-500/10 rounded-xl transition"
                         title="Clear all history">
                         <i data-lucide="trash-2" class="w-5 h-5"></i>
                     </button>
@@ -417,17 +292,17 @@
 
             <!-- NEW: Filter Tabs -->
             <div class="flex p-1 bg-white/5 rounded-xl border border-white/5 backdrop-blur-md">
-                <button onclick="setHistoryFilter('all')" id="tab-all"
+                <button onclick="setHistoryFilter('all')" id="tab-all" 
                     class="flex-1 py-2.5 text-sm font-bold rounded-lg transition-all duration-300 flex items-center justify-center gap-2 bg-white text-black shadow-lg">
                     <i data-lucide="grid" class="w-4 h-4"></i> All
                 </button>
-                <button onclick="setHistoryFilter('favorites')" id="tab-favorites"
+                <button onclick="setHistoryFilter('favorites')" id="tab-favorites" 
                     class="flex-1 py-2.5 text-sm font-bold rounded-lg transition-all duration-300 flex items-center justify-center gap-2 text-gray-400 hover:text-white">
                     <i data-lucide="star" class="w-4 h-4"></i> Favorites
                 </button>
             </div>
         </div>
-
+        
         <!-- List Container -->
         <div id="history-list" class="flex-1 overflow-y-auto p-6 space-y-8 scroll-smooth">
             <p class="text-gray-500 text-center mt-20">No wallpapers yet.</p>
@@ -501,22 +376,21 @@
             <p class="text-center text-xs text-gray-500">Generated by Flux-1 Schnell</p>
         </div>
     </div>
-    <footer class="fixed bottom-4 left-0 w-full text-center z-0 pointer-events-none select-none">
-        <div
-            class="flex flex-col items-center justify-center gap-1 opacity-30 hover:opacity-60 transition-opacity duration-500">
-
-            <!-- Logo/Title -->
-            <p class="text-[10px] text-white tracking-[0.3em] uppercase font-semibold">
-                Wallpaper Studio Pro
-            </p>
-
-            <!-- Copyright Line -->
-            <p class="text-[10px] text-gray-400 font-light">
-                &copy; <span id="footer-year"></span> All Rights Reserved
-            </p>
-
-        </div>
-    </footer>
+<footer class="fixed bottom-4 left-0 w-full text-center z-0 pointer-events-none select-none">
+    <div class="flex flex-col items-center justify-center gap-1 opacity-30 hover:opacity-60 transition-opacity duration-500">
+        
+        <!-- Logo/Title -->
+        <p class="text-[10px] text-white tracking-[0.3em] uppercase font-semibold">
+            Wallpaper Studio Pro
+        </p>
+        
+        <!-- Copyright Line -->
+        <p class="text-[10px] text-gray-400 font-light">
+            &copy; <span id="footer-year"></span> All Rights Reserved
+        </p>
+        
+    </div>
+</footer>
     <!-- Hidden Logic Inputs -->
     <input type="hidden" id="width" value="1080">
     <input type="hidden" id="height" value="1920">
@@ -526,3 +400,5 @@
 </body>
 
 </html>
+
+

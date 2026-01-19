@@ -17,62 +17,15 @@ const state = {
     seed: null,
     numSteps: 4,
     historyFilter: 'all',
-    isPromptManuallyEdited: false
+    isPromptManuallyEdited: false 
 };
 
 // Global WebGL Variables
-let targetColor = new THREE.Color(0x444444);
+let targetColor = new THREE.Color(0x444444); 
 let particleMaterial = null;
 
 // Global Timer for Typewriter Effect
 let typewriterTimeout = null;
-
-// ============================================================================
-// PERFORMANCE DETECTION & TIER SYSTEM
-// ============================================================================
-
-/**
- * Detects device performance capabilities and returns a tier
- * @returns {'high'|'medium'|'low'} Performance tier
- */
-function detectPerformanceTier() {
-    // Check for user preference (reduced motion or manual override)
-    const savedTier = localStorage.getItem('performance_tier');
-    if (savedTier) return savedTier;
-
-    // Check for reduced motion preference
-    const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-    if (prefersReducedMotion) return 'low';
-
-    // Mobile devices default to medium
-    if (isMobileDevice()) return 'medium';
-
-    // Check device memory (if available)
-    const memory = navigator.deviceMemory; // GB, Chrome only
-    if (memory && memory < 4) return 'low';
-    if (memory && memory < 8) return 'medium';
-
-    // Check CPU cores
-    const cores = navigator.hardwareConcurrency || 4;
-    if (cores < 4) return 'low';
-    if (cores < 8) return 'medium';
-
-    // Default to high for desktop with good specs
-    return 'high';
-}
-
-// Initialize performance tier
-const performanceTier = detectPerformanceTier();
-
-/**
- * Apply performance tier to document
- */
-function applyPerformanceTier(tier) {
-    document.body.classList.remove('performance-high', 'performance-medium', 'performance-low');
-    document.body.classList.add(`performance-${tier}`);
-    localStorage.setItem('performance_tier', tier);
-    console.log(`Performance tier: ${tier}`);
-}
 
 // ============================================================================
 // UTILITY FUNCTIONS
@@ -125,31 +78,22 @@ async function copyToClipboard(text) {
 // ============================================================================
 window.onload = () => {
     if (window.lucide) lucide.createIcons();
-
-    // Apply performance tier
-    applyPerformanceTier(performanceTier);
-
-    loadPreferences();
-
-    initCarousel();
-    initSwipeGestures();
-
-    // Conditionally initialize performance-heavy features
-    if (performanceTier === 'high') {
-        initParallax();
-        initMagneticButtons();
-        initShinyBorders();
-        initWebGL();
-    } else if (performanceTier === 'medium') {
-        initWebGL(); // WebGL only on medium
-    }
-    // Low tier: skip all heavy animations
-
+    
+    loadPreferences(); 
+    
+    initCarousel();      
+    initSwipeGestures(); 
+    initParallax();      
+    initWebGL();         
+    
+    // New UI/UX Initializations
+    initMagneticButtons(); // Category B: Tactile feel
+    initShinyBorders();    // Category A: Visual polish
+    
     initKeyboardNavigation();
     renderHistory();
     renderFavorites();
     updateTime();
-    initPerformanceModeUI(); // Initialize performance mode UI
 
     const generateBtn = document.getElementById('generate-button');
     if (generateBtn) generateBtn.addEventListener('click', handleGenerate);
@@ -197,7 +141,7 @@ function initCarousel() {
         track.innerHTML = '';
         items.forEach((item) => {
             const el = document.createElement('div');
-            el.className = 'carousel-item';
+            el.className = 'carousel-item'; 
             el.style.backgroundImage = `url('${item.image}')`;
             el.innerHTML = `<div class="w-full h-full carousel-overlay"></div>`;
             track.appendChild(el);
@@ -231,7 +175,7 @@ function updateCarouselUI() {
             else child.classList.remove('is-active');
         });
     }
-
+    
     // Update Labels
     const genreLabel = document.getElementById('genre-label');
     const styleLabel = document.getElementById('style-label');
@@ -242,7 +186,7 @@ function updateCarouselUI() {
     const newColorHex = GENRES[state.activeGenreIndex].color || 0x444444;
     targetColor.setHex(newColorHex);
     updateAuroraColors(newColorHex);
-
+    
     // Category B: Typewriter Prompt
     updateCustomPromptPlaceholder();
     savePreferences();
@@ -254,7 +198,7 @@ function updateAuroraColors(hexColor) {
     const r = color.r * 255;
     const g = color.g * 255;
     const b = color.b * 255;
-
+    
     // Set CSS variable for gradients if supported in CSS
     document.documentElement.style.setProperty('--aurora-color', `rgba(${r}, ${g}, ${b}, 0.4)`);
     document.documentElement.style.setProperty('--aurora-color-secondary', `rgba(${r}, ${g}, ${b}, 0.1)`);
@@ -263,7 +207,7 @@ function updateAuroraColors(hexColor) {
 // Category B: Typewriter Effect for Prompt
 function updateCustomPromptPlaceholder() {
     if (!GENRES || !STYLES) return;
-
+    
     const genre = GENRES[state.activeGenreIndex].prompt;
     const style = STYLES[state.activeStyleIndex].prompt;
     const color = state.selectedColorBias ? `, ${state.selectedColorBias} color palette` : '';
@@ -272,17 +216,17 @@ function updateCustomPromptPlaceholder() {
 
     const area = document.getElementById('custom-prompt');
     if (!area) return;
-
+    
     area.placeholder = text;
 
     if (!state.isPromptManuallyEdited) {
         // Clear previous timeout to avoid overlapping typing
         if (typewriterTimeout) clearTimeout(typewriterTimeout);
-
+        
         let i = 0;
         area.value = "";
         const speed = 10; // ms per char
-
+        
         function type() {
             if (i < text.length) {
                 area.value += text.charAt(i);
@@ -300,17 +244,17 @@ function updateCustomPromptPlaceholder() {
 
 // B5: Magnetic Buttons
 function initMagneticButtons() {
-    if (isMobileDevice()) return;
-
+    if (isMobileDevice()) return; 
+    
     const btns = document.querySelectorAll('.btn-haptic, button');
-
+    
     btns.forEach(btn => {
         btn.addEventListener('mousemove', (e) => {
             const rect = btn.getBoundingClientRect();
             // Calculate distance from center
             const x = e.clientX - rect.left - rect.width / 2;
             const y = e.clientY - rect.top - rect.height / 2;
-
+            
             // Move button slightly towards mouse (Magnetic effect)
             btn.style.transform = `translate(${x * 0.2}px, ${y * 0.2}px)`;
         });
@@ -318,15 +262,15 @@ function initMagneticButtons() {
         btn.addEventListener('mouseleave', () => {
             btn.style.transform = 'translate(0px, 0px)';
         });
-
+        
         // B8: Interactive Squeeze Click
         btn.addEventListener('mousedown', () => {
-            btn.style.transform = 'scale(0.95, 0.95)';
+             btn.style.transform = 'scale(0.95, 0.95)';
         });
-
+        
         btn.addEventListener('mouseup', () => {
-            btn.style.transform = 'scale(1.05, 1.05)';
-            setTimeout(() => btn.style.transform = 'translate(0,0)', 150);
+             btn.style.transform = 'scale(1.05, 1.05)';
+             setTimeout(() => btn.style.transform = 'translate(0,0)', 150);
         });
     });
 }
@@ -334,13 +278,13 @@ function initMagneticButtons() {
 // A4: Shiny Borders (Glassmorphic Glow)
 function initShinyBorders() {
     const cards = document.querySelectorAll('.split-card-container, #advanced-controls');
-
+    
     document.addEventListener('mousemove', (e) => {
         cards.forEach(card => {
             const rect = card.getBoundingClientRect();
             const x = e.clientX - rect.left;
             const y = e.clientY - rect.top;
-
+            
             card.style.setProperty('--mouse-x', `${x}px`);
             card.style.setProperty('--mouse-y', `${y}px`);
         });
@@ -349,27 +293,20 @@ function initShinyBorders() {
 
 // B6: Confetti Success
 function triggerConfetti() {
-    // Adjust particle count based on performance tier
-    const tier = (typeof performanceTier !== 'undefined') ? performanceTier : 'medium';
-    let count = 100;
-    if (tier === 'medium') count = 50;
-    if (tier === 'low') count = 0; // Skip confetti on low-end devices
-
-    if (count === 0) return;
-
+    const count = 100;
     const origin = { x: window.innerWidth / 2, y: window.innerHeight / 2 };
-
+    
     for (let i = 0; i < count; i++) {
         const particle = document.createElement('div');
         particle.classList.add('confetti'); // Ensure this class is defined in CSS (position fixed, etc)
-
+        
         // Random properties
         const angle = Math.random() * Math.PI * 2;
         const velocity = 2 + Math.random() * 6;
         const tx = Math.cos(angle) * velocity * 100;
         const ty = Math.sin(angle) * velocity * 100;
         const color = ['#ff0', '#f0f', '#0ff', '#0f0', '#fff'][Math.floor(Math.random() * 5)];
-
+        
         particle.style.cssText = `
             position: fixed;
             left: ${origin.x}px;
@@ -383,15 +320,15 @@ function triggerConfetti() {
             transition: all 1s ease-out;
             opacity: 1;
         `;
-
+        
         document.body.appendChild(particle);
-
+        
         // Animate
         requestAnimationFrame(() => {
             particle.style.transform = `translate(${tx}px, ${ty}px) scale(0)`;
             particle.style.opacity = '0';
         });
-
+        
         // Cleanup
         setTimeout(() => particle.remove(), 1000);
     }
@@ -412,19 +349,19 @@ function checkPromptConflict() {
             const oldPrompt = document.getElementById('custom-prompt').value;
             navigator.clipboard.writeText(oldPrompt).then(() => {
                 showToast("Old prompt copied to clipboard", "info");
-            }).catch(() => { });
+            }).catch(() => {});
 
             state.isPromptManuallyEdited = false;
-            document.getElementById('custom-prompt').value = '';
-            return true;
+            document.getElementById('custom-prompt').value = ''; 
+            return true; 
         }
-        return false;
+        return false; 
     }
-    return true;
+    return true; 
 }
 
 function nextSlide(type) {
-    if (!checkPromptConflict()) return;
+    if (!checkPromptConflict()) return; 
 
     if (type === 'genre') {
         state.activeGenreIndex = (state.activeGenreIndex + 1) % GENRES.length;
@@ -435,7 +372,7 @@ function nextSlide(type) {
 }
 
 function prevSlide(type) {
-    if (!checkPromptConflict()) return;
+    if (!checkPromptConflict()) return; 
 
     if (type === 'genre') {
         state.activeGenreIndex = (state.activeGenreIndex - 1 + GENRES.length) % GENRES.length;
@@ -446,10 +383,10 @@ function prevSlide(type) {
 }
 
 function randomize() {
-    state.isPromptManuallyEdited = false;
+    state.isPromptManuallyEdited = false; 
     const promptInput = document.getElementById('custom-prompt');
-    if (promptInput) promptInput.value = '';
-
+    if(promptInput) promptInput.value = '';
+    
     const overlay = document.getElementById('generation-overlay');
     if (overlay && !overlay.classList.contains('hidden')) {
         closeGenerationDisplay();
@@ -526,11 +463,11 @@ function initParallax() {
 
     document.addEventListener('mousemove', (e) => {
         const { clientX, clientY } = e;
-        const xPos = (clientX / window.innerWidth - 0.5) * 2;
+        const xPos = (clientX / window.innerWidth - 0.5) * 2; 
         const yPos = (clientY / window.innerHeight - 0.5) * 2;
         container.style.transform = `rotateX(${yPos * -10}deg) rotateY(${xPos * 10}deg)`;
     });
-
+    
     document.addEventListener('mouseleave', () => {
         container.style.transform = `rotateX(0deg) rotateY(0deg)`;
     });
@@ -574,7 +511,7 @@ function toggleAspectRatio() {
         container.classList.remove('desktop-mode');
         showToast('Mobile mode (1080x1920)', 'info', 2000);
     }
-    if (window.lucide) lucide.createIcons();
+    if(window.lucide) lucide.createIcons();
 }
 
 function setColorBias(color) {
@@ -593,61 +530,28 @@ function setCustomColor() {
     }
 }
 
-function toggleAdvancedControls(event) {
+function toggleAdvancedControls() {
     state.advancedMode = !state.advancedMode;
     const panel = document.getElementById('advanced-controls');
     panel.classList.toggle('expanded');
-    const btn = event ? event.currentTarget : document.querySelector('[onclick*="toggleAdvancedControls"]');
-    const icon = btn ? btn.querySelector('i') : null;
+    const btn = event.currentTarget;
+    const icon = btn.querySelector('i');
     if (icon) {
         icon.setAttribute('data-lucide', state.advancedMode ? 'chevron-up' : 'chevron-down');
-        if (window.lucide) lucide.createIcons();
+        if(window.lucide) lucide.createIcons();
     }
 }
 
 function updateSeed(value) { state.seed = value ? parseInt(value) : null; }
-function updateSteps(value) {
-    state.numSteps = parseInt(value);
-    document.getElementById('steps-value').textContent = value;
+function updateSteps(value) { 
+    state.numSteps = parseInt(value); 
+    document.getElementById('steps-value').textContent = value; 
 }
 function randomSeed() {
     const seed = Math.floor(Math.random() * 1000000);
     document.getElementById('seed-input').value = seed;
     state.seed = seed;
     showToast(`Random seed: ${seed}`, 'info', 2000);
-}
-
-// Performance Mode Switcher
-function setPerformanceMode(mode) {
-    // Update UI
-    ['low', 'medium', 'high'].forEach(m => {
-        const btn = document.getElementById(`perf-${m}`);
-        if (btn) {
-            if (m === mode) {
-                btn.classList.add('bg-white', 'text-black');
-                btn.classList.remove('bg-white/10');
-            } else {
-                btn.classList.remove('bg-white', 'text-black');
-                btn.classList.add('bg-white/10');
-            }
-        }
-    });
-
-    // Update display
-    const display = document.getElementById('current-perf-mode');
-    if (display) display.textContent = mode.charAt(0).toUpperCase() + mode.slice(1);
-
-    // Apply new tier
-    applyPerformanceTier(mode);
-
-    // Show toast with reload message
-    showToast(`Performance mode: ${mode}. Reload page to apply all changes.`, 'info', 4000);
-}
-
-// Initialize performance mode UI on load
-function initPerformanceModeUI() {
-    const currentMode = localStorage.getItem('performance_tier') || performanceTier;
-    setPerformanceMode(currentMode);
 }
 
 // ============================================================================
@@ -662,15 +566,15 @@ const historyObserver = new IntersectionObserver((entries) => {
     });
 }, { root: document.getElementById('history-drawer'), threshold: 0.1 });
 
-window.setHistoryFilter = function (filter) {
+window.setHistoryFilter = function(filter) {
     state.historyFilter = filter;
     const tabAll = document.getElementById('tab-all');
     const tabFav = document.getElementById('tab-favorites');
-
+    
     // Toggle logic
     const activeClass = "flex-1 py-2.5 text-sm font-bold rounded-lg bg-white text-black shadow-lg flex items-center justify-center gap-2";
     const inactiveClass = "flex-1 py-2.5 text-sm font-bold rounded-lg text-gray-400 hover:text-white flex items-center justify-center gap-2";
-
+    
     if (filter === 'all') {
         tabAll.className = activeClass; tabFav.className = inactiveClass;
     } else {
@@ -685,7 +589,7 @@ function toggleHistory() {
     if (drawer.classList.contains('translate-x-full')) {
         drawer.classList.remove('translate-x-full');
         overlay.classList.remove('hidden');
-        renderHistory();
+        renderHistory(); 
     } else {
         drawer.classList.add('translate-x-full');
         overlay.classList.add('hidden');
@@ -693,34 +597,15 @@ function toggleHistory() {
 }
 
 function saveToHistory(url, genreName, styleName, prompt, seed) {
-    try {
-        const history = JSON.parse(localStorage.getItem('wallpaper_history') || '[]');
-        const newItem = { url, genre: genreName, style: styleName, prompt, seed, date: new Date().toLocaleString(), timestamp: Date.now() };
-        history.unshift(newItem);
-        if (history.length > APP_CONFIG.MAX_HISTORY_ITEMS) history.pop();
-        localStorage.setItem('wallpaper_history', JSON.stringify(history));
-    } catch (e) {
-        // Handle QuotaExceededError - storage is full
-        if (e.name === 'QuotaExceededError') {
-            // Try to clear old items and retry
-            try {
-                const history = JSON.parse(localStorage.getItem('wallpaper_history') || '[]');
-                // Keep only the most recent 10 items
-                const trimmed = history.slice(0, 10);
-                localStorage.setItem('wallpaper_history', JSON.stringify(trimmed));
-                showToast('Storage cleared to make room', 'warning', 3000);
-            } catch (retryError) {
-                showToast('Storage full - cannot save history', 'error');
-                console.error('LocalStorage error:', retryError);
-            }
-        } else {
-            console.error('Error saving to history:', e);
-        }
-    }
+    const history = JSON.parse(localStorage.getItem('wallpaper_history') || '[]');
+    const newItem = { url, genre: genreName, style: styleName, prompt, seed, date: new Date().toLocaleString(), timestamp: Date.now() };
+    history.unshift(newItem);
+    if (history.length > APP_CONFIG.MAX_HISTORY_ITEMS) history.pop();
+    localStorage.setItem('wallpaper_history', JSON.stringify(history));
 }
 
 function clearHistory() {
-    if (confirm('Clear history? Favorites will be kept.')) {
+    if(confirm('Clear history? Favorites will be kept.')) {
         localStorage.removeItem('wallpaper_history');
         renderHistory();
         showToast('History cleared', 'success');
@@ -732,7 +617,7 @@ function clearHistory() {
 function renderHistory() {
     let history = JSON.parse(localStorage.getItem('wallpaper_history') || '[]');
     const list = document.getElementById('history-list');
-
+    
     historyObserver.disconnect();
     list.innerHTML = '';
 
@@ -746,19 +631,17 @@ function renderHistory() {
                 <i data-lucide="image" class="w-12 h-12 mb-4 opacity-50"></i>
                 <p>No wallpapers found.</p>
             </div>`;
-        if (window.lucide) lucide.createIcons();
+        if(window.lucide) lucide.createIcons();
         return;
     }
 
     history.forEach((item) => {
         const isFav = state.favorites.includes(item.url);
         const card = document.createElement('div');
-        card.className = 'history-card reveal';
-
+        card.className = 'history-card reveal'; 
+        
         card.innerHTML = `
-            <img src="${item.url}" class="history-card-img" loading="lazy" 
-                 onclick="showResult('${item.url}', ${item.seed || 'null'})"
-                 onerror="this.style.opacity='0.3'; this.src='data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22%3E%3Crect fill=%22%23333%22 width=%22100%22 height=%22100%22/%3E%3Ctext x=%2250%22 y=%2250%22 text-anchor=%22middle%22 dy=%22.3em%22 fill=%22%23666%22 font-size=%2212%22%3EImage Unavailable%3C/text%3E%3C/svg%3E';">
+            <img src="${item.url}" class="history-card-img" loading="lazy" onclick="showResult('${item.url}', ${item.seed || 'null'})">
             
             <!-- Genre Label (Top Left) -->
             <div class="overlay-info">
@@ -795,7 +678,7 @@ function renderHistory() {
         historyObserver.observe(card);
     });
 
-    if (window.lucide) lucide.createIcons();
+    if(window.lucide) lucide.createIcons();
 }
 function deleteHistoryItem(timestamp) {
     let history = JSON.parse(localStorage.getItem('wallpaper_history') || '[]');
@@ -808,14 +691,7 @@ function toggleFavorite(url) {
     const index = state.favorites.indexOf(url);
     if (index > -1) state.favorites.splice(index, 1);
     else state.favorites.push(url);
-
-    try {
-        localStorage.setItem('wallpaper_favorites', JSON.stringify(state.favorites));
-    } catch (e) {
-        console.error('Error saving favorites:', e);
-        showToast('Could not save favorite', 'error');
-    }
-
+    localStorage.setItem('wallpaper_favorites', JSON.stringify(state.favorites));
     renderHistory();
     renderFavorites();
 }
@@ -830,7 +706,7 @@ function renderFavorites() {
 }
 
 // 2B: Remix
-window.remixImage = function (timestamp) {
+window.remixImage = function(timestamp) {
     const history = JSON.parse(localStorage.getItem('wallpaper_history') || '[]');
     const item = history.find(i => i.timestamp === Number(timestamp) || i.url === timestamp);
     if (!item) return;
@@ -860,12 +736,8 @@ function updateTime() {
     const now = new Date();
     const timeEl = document.getElementById('lock-time');
     const dateEl = document.getElementById('lock-date');
-    const yearEl = document.getElementById('footer-year');
-
     if (timeEl) timeEl.innerText = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
     if (dateEl) dateEl.innerText = now.toLocaleDateString([], { weekday: 'long', month: 'long', day: 'numeric' });
-    if (yearEl && !yearEl.innerText) yearEl.innerText = now.getFullYear(); // Set once, don't update every second
-
     setTimeout(updateTime, 1000);
 }
 
@@ -884,20 +756,9 @@ function showResult(url, seed = null) {
     document.getElementById('lock-screen-overlay').classList.add('hidden');
     modal.classList.remove('hidden');
 
-    // Store current wallpaper data for sharing
-    window.currentWallpaperData = {
-        imageUrl: url,
-        genre: GENRES[state.activeGenreIndex]?.name || 'Unknown',
-        style: STYLES[state.activeStyleIndex]?.name || 'Unknown',
-        prompt: state.currentPrompt || '',
-        seed: seed,
-        width: state.isDesktopMode ? 1920 : 1080,
-        height: state.isDesktopMode ? 1080 : 1920
-    };
-
     // Category C: Extract Colors when image is loaded
     // Need to handle CORS if loading from external URL
-
+    
     img.onload = () => extractColors(img);
 }
 
@@ -910,19 +771,19 @@ function extractColors(imgElement) {
         canvas.width = 100; // Small size for performance
         canvas.height = 100;
         ctx.drawImage(imgElement, 0, 0, 100, 100);
-
+        
         // Sampling points: Center and Corners
         const samplePoints = [
-            { x: 50, y: 50 }, { x: 20, y: 20 }, { x: 80, y: 20 }, { x: 20, y: 80 }, { x: 80, y: 80 }
+            {x: 50, y: 50}, {x: 20, y: 20}, {x: 80, y: 20}, {x: 20, y: 80}, {x: 80, y: 80}
         ];
-
+        
         // Ensure container exists in HTML (User needs to add this div if not present)
         // If not present, we can create it dynamically in the modal actions
         let paletteContainer = document.getElementById('color-palette-container');
-        if (!paletteContainer) {
+        if(!paletteContainer) {
             // Create it inside the result modal if it doesn't exist
             const resultModalContent = document.querySelector('#result-modal .flex-col.gap-3');
-            if (resultModalContent) {
+            if(resultModalContent) {
                 paletteContainer = document.createElement('div');
                 paletteContainer.id = 'color-palette-container';
                 paletteContainer.className = 'flex justify-center gap-2 mt-2';
@@ -931,13 +792,13 @@ function extractColors(imgElement) {
                 return;
             }
         }
-
+        
         paletteContainer.innerHTML = '';
 
         samplePoints.forEach(p => {
             const pixel = ctx.getImageData(p.x, p.y, 1, 1).data;
             const hex = "#" + ((1 << 24) + (pixel[0] << 16) + (pixel[1] << 8) + pixel[2]).toString(16).slice(1).toUpperCase();
-
+            
             const dot = document.createElement('div');
             dot.className = "w-8 h-8 rounded-full cursor-pointer hover:scale-125 transition-transform border border-white/20 shadow-lg";
             dot.style.backgroundColor = hex;
@@ -948,7 +809,7 @@ function extractColors(imgElement) {
             };
             paletteContainer.appendChild(dot);
         });
-
+        
     } catch (e) {
         console.warn("Cannot extract colors (CORS limitations likely)", e);
     }
@@ -1012,7 +873,7 @@ async function handleGenerate() {
         if (data && data.output) {
             stopGenerationAnimation();
             triggerConfetti(); // Category B: Success Confetti
-
+            
             canvas.style.opacity = '0';
             statusDiv.style.opacity = '0';
 
@@ -1022,11 +883,11 @@ async function handleGenerate() {
                 resultImage.src = data.output;
                 resultImage.classList.remove('hidden');
                 resultImage.style.opacity = '0';
-
+                
                 setTimeout(() => {
                     resultImage.style.opacity = '1';
                     actions.classList.remove('hidden');
-                    if (window.lucide) lucide.createIcons();
+                    if(window.lucide) lucide.createIcons();
                 }, 50);
             }, 500);
 
@@ -1057,7 +918,7 @@ function initWebGL() {
     const canvas = document.getElementById('webgl-canvas');
     if (!canvas) return;
     if (!window.WebGLRenderingContext) { enableFallbackMode(); return; }
-
+    
     try {
         const scene = new THREE.Scene();
         const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
@@ -1070,7 +931,7 @@ function initWebGL() {
         const positions = new Float32Array(particleCount * 3);
         for (let i = 0; i < particleCount * 3; i++) positions[i] = (Math.random() - 0.5) * 20;
         geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
-
+        
         particleMaterial = new THREE.PointsMaterial({ color: 0x444444, size: 0.05, transparent: true, opacity: 0.6 });
         const particles = new THREE.Points(geometry, particleMaterial);
         scene.add(particles);
@@ -1088,18 +949,6 @@ function initWebGL() {
             camera.updateProjectionMatrix();
             renderer.setSize(window.innerWidth, window.innerHeight);
         });
-
-        // Handle WebGL context loss (common on mobile)
-        canvas.addEventListener('webglcontextlost', (event) => {
-            event.preventDefault();
-            console.warn('WebGL context lost');
-        }, false);
-
-        canvas.addEventListener('webglcontextrestored', () => {
-            console.log('WebGL context restored');
-            // Reinitialize WebGL
-            initWebGL();
-        }, false);
     } catch (e) { enableFallbackMode(); }
 }
 
@@ -1130,11 +979,11 @@ function initGenerationAnimation() {
     const positions = new Float32Array(pixelCount * 3);
     for (let i = 0; i < pixelCount * 3; i++) positions[i] = (Math.random() - 0.5) * 20;
     pixelGeometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
-
+    
     const pixelMaterial = new THREE.PointsMaterial({ size: 0.12, color: 0xffffff, transparent: true, opacity: 0.95, blending: THREE.AdditiveBlending });
     const pixelSystem = new THREE.Points(pixelGeometry, pixelMaterial);
     generationScene.add(pixelSystem);
-
+    
     let startTime = Date.now();
     function animate() {
         generationAnimationId = requestAnimationFrame(animate);
@@ -1211,7 +1060,6 @@ window.toggleAdvancedControls = toggleAdvancedControls;
 window.updateSeed = updateSeed;
 window.updateSteps = updateSteps;
 window.randomSeed = randomSeed;
-window.setPerformanceMode = setPerformanceMode;
 window.toggleHistory = toggleHistory;
 window.deleteHistoryItem = deleteHistoryItem;
 window.clearHistory = clearHistory;
@@ -1226,7 +1074,7 @@ window.shareImage = shareImage;
 window.closeGenerationDisplay = closeGenerationDisplay;
 window.viewFullResult = viewFullResult;
 window.downloadGenerated = downloadGenerated;
-window.remixImage = remixImage;
+window.remixImage = remixImage; 
 window.downloadFromModal = async function () {
     const url = document.getElementById('result-image').src;
     if (url) await downloadImageDirect(url);

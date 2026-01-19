@@ -315,6 +315,33 @@
                 link.download = `${wallpaper.title}.png`;
                 link.click();
             };
+
+            // Like button
+            const likeBtn = document.getElementById('detail-like-btn');
+            likeBtn.onclick = async () => {
+                const user = await getCurrentUser();
+                if (!user) {
+                    alert('Please sign in to like wallpapers');
+                    if (typeof openAuthModal === 'function') {
+                        openAuthModal();
+                    }
+                    return;
+                }
+
+                const { liked, error } = await toggleLike(wallpaper.id);
+                if (error) {
+                    console.error('Like error:', error);
+                    alert('Failed to like: ' + error.message);
+                } else {
+                    // Update UI
+                    const icon = likeBtn.querySelector('i');
+                    if (liked) {
+                        icon.classList.add('fill-current', 'text-red-500');
+                    } else {
+                        icon.classList.remove('fill-current', 'text-red-500');
+                    }
+                }
+            };
         };
 
         // Close detail modal
