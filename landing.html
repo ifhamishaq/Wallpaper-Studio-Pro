@@ -1,348 +1,152 @@
 <!DOCTYPE html>
-<html lang="en">
+<html class="dark" lang="en">
 
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta charset="utf-8" />
+    <meta content="width=device-width, initial-scale=1.0" name="viewport" />
+    <title>Wallpaper Studio Pro - AI Wallpaper Generator</title>
 
-    <!-- SEO Meta Tags -->
-    <title>Wallpaper Studio Pro - Create Stunning AI Wallpapers in Seconds</title>
-    <meta name="description"
-        content="Generate beautiful AI wallpapers with 17 unique genres and 20 artistic styles. Free to use, instant results. Join thousands of creators.">
-    <meta name="keywords"
-        content="AI wallpaper generator, wallpaper creator, AI art, phone wallpaper, desktop wallpaper, free wallpaper">
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap"
+        rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap"
+        rel="stylesheet" />
 
-    <!-- Open Graph -->
-    <meta property="og:title" content="Wallpaper Studio Pro - AI Wallpaper Generator">
-    <meta property="og:description" content="Create stunning AI-generated wallpapers in seconds">
-    <meta property="og:type" content="website">
-    <meta property="og:url" content="https://wallpaperstudiopro.com">
-
-    <!-- Favicon -->
-    <link rel="icon"
-        href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🎨</text></svg>">
-
-    <!-- Fonts -->
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&display=swap" rel="stylesheet">
-
-    <!-- Tailwind CSS -->
-    <script src="https://cdn.tailwindcss.com"></script>
-
-    <!-- Lucide Icons -->
-    <script src="https://unpkg.com/lucide@latest"></script>
-
-    <!-- Custom Styles -->
-    <link rel="stylesheet" href="style.css">
-
-    <style>
-        .gradient-text {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
+    <script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#ffffff",
+                        "accent": "#19e619",
+                        "zen-green": "#062016",
+                    },
+                    fontFamily: {
+                        "display": ["Inter", "sans-serif"]
+                    },
+                    borderRadius: {
+                        "DEFAULT": "1.25rem",
+                        "lg": "2rem",
+                        "xl": "3rem",
+                    },
+                },
+            },
         }
+    </script>
 
-        .hero-gradient {
-            background: radial-gradient(circle at 50% 0%, rgba(102, 126, 234, 0.2), transparent 50%),
-                radial-gradient(circle at 80% 100%, rgba(118, 75, 162, 0.2), transparent 50%);
+    <link rel="stylesheet" href="style.css">
+    <style>
+        body {
+            min-height: 100dvh;
         }
     </style>
 </head>
 
-<body class="bg-black text-white">
-    <!-- Navigation -->
-    <nav class="fixed top-0 w-full z-50 glass-secondary border-b border-white/10">
-        <div class="container mx-auto px-4 py-4 flex items-center justify-between">
-            <div class="flex items-center gap-2">
-                <span class="text-2xl">🎨</span>
-                <span class="text-xl font-bold">Wallpaper Studio Pro</span>
-            </div>
-
-            <div class="hidden md:flex items-center gap-6">
-                <a href="#features" class="hover:text-purple-400 transition">Features</a>
-                <a href="#community" class="hover:text-purple-400 transition">Community</a>
-                <a href="#how-it-works" class="hover:text-purple-400 transition">How It Works</a>
-            </div>
-
-            <div class="flex items-center gap-3">
-                <a href="community.html" class="hidden sm:block btn-secondary px-4 py-2">
-                    Gallery
-                </a>
-                <a href="index.html" class="btn-primary px-6 py-2">
-                    Start Creating
-                </a>
-            </div>
-        </div>
-    </nav>
+<body class="font-display text-white selection:bg-white/20 overflow-x-hidden">
+    <!-- Background -->
+    <div class="fixed inset-0 z-0 mesh-gradient"></div>
 
     <!-- Hero Section -->
-    <section class="hero-gradient min-h-screen flex items-center justify-center pt-20 px-4">
-        <div class="container mx-auto text-center">
-            <h1 class="text-5xl md:text-7xl font-bold mb-6 leading-tight">
-                Create <span class="gradient-text">Stunning Wallpapers</span><br>
-                in Seconds with AI
+    <main class="relative z-10 min-h-screen px-6 pt-24 pb-32 flex flex-col items-center justify-center">
+        <div class="text-center max-w-3xl mx-auto mb-12">
+            <h1 class="text-5xl md:text-7xl font-bold tracking-tight mb-6">
+                Create Stunning<br />
+                <span class="bg-gradient-to-r from-white to-white/60 bg-clip-text text-transparent">AI Wallpapers</span>
             </h1>
-
-            <p class="text-xl md:text-2xl text-gray-300 mb-8 max-w-2xl mx-auto">
-                Choose from 17 unique genres and 20 artistic styles. No signup required to start creating.
+            <p class="text-lg md:text-xl text-white/60 mb-8 max-w-2xl mx-auto">
+                Transform your ideas into breathtaking wallpapers with the power of AI.
+                No design skills required.
             </p>
 
-            <div class="flex flex-col sm:flex-row gap-4 justify-center mb-12">
-                <a href="index.html" class="btn-primary text-lg px-8 py-4 inline-block">
-                    <i data-lucide="wand-2" class="w-5 h-5 inline mr-2"></i>
-                    Start Creating Free
+            <div class="flex flex-col sm:flex-row gap-4 justify-center items-center">
+                <a href="index.html"
+                    class="px-8 py-4 glass-pill rounded-full font-bold text-base tracking-wide transition-all active:scale-95 hover:bg-white/20">
+                    Start Creating
                 </a>
-                <a href="community.html" class="btn-secondary text-lg px-8 py-4 inline-block">
-                    <i data-lucide="image" class="w-5 h-5 inline mr-2"></i>
-                    Browse Gallery
+                <a href="community.html"
+                    class="px-8 py-4 glass-main rounded-full font-medium text-base transition-all active:scale-95 hover:bg-white/10">
+                    Explore Gallery
                 </a>
-            </div>
-
-            <!-- Stats -->
-            <div class="flex flex-wrap gap-8 justify-center text-sm">
-                <div>
-                    <div class="text-3xl font-bold mb-1">10K+</div>
-                    <div class="text-gray-400">Wallpapers Created</div>
-                </div>
-                <div>
-                    <div class="text-3xl font-bold mb-1">17</div>
-                    <div class="text-gray-400">Unique Genres</div>
-                </div>
-                <div>
-                    <div class="text-3xl font-bold mb-1">20</div>
-                    <div class="text-gray-400">Art Styles</div>
-                </div>
-                <div>
-                    <div class="text-3xl font-bold mb-1">100%</div>
-                    <div class="text-gray-400">Free Forever</div>
-                </div>
-            </div>
-
-            <!-- Preview Image/Demo -->
-            <div class="mt-16 max-w-5xl mx-auto">
-                <div class="glass-primary rounded-3xl p-4 transform hover:scale-105 transition-transform">
-                    <img src="https://via.placeholder.com/1200x600/1a1a1a/ffffff?text=App+Preview"
-                        alt="Wallpaper Studio Pro Interface" class="rounded-2xl w-full">
-                </div>
             </div>
         </div>
-    </section>
+
+        <!-- Feature Preview -->
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-4 max-w-4xl mx-auto">
+            <div class="aspect-[9/16] rounded-2xl glass-main overflow-hidden">
+                <img src="https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=400" alt="Preview"
+                    class="w-full h-full object-cover opacity-80">
+            </div>
+            <div class="aspect-[9/16] rounded-2xl glass-main overflow-hidden">
+                <img src="https://images.unsplash.com/photo-1634017839464-5c339ebe3cb4?w=400" alt="Preview"
+                    class="w-full h-full object-cover opacity-80">
+            </div>
+            <div class="aspect-[9/16] rounded-2xl glass-main overflow-hidden hidden md:block">
+                <img src="https://images.unsplash.com/photo-1618556450994-a6a128ef0d9d?w=400" alt="Preview"
+                    class="w-full h-full object-cover opacity-80">
+            </div>
+            <div class="aspect-[9/16] rounded-2xl glass-main overflow-hidden hidden md:block">
+                <img src="https://images.unsplash.com/photo-1618005198919-d3d4b5a92ead?w=400" alt="Preview"
+                    class="w-full h-full object-cover opacity-80">
+            </div>
+        </div>
+    </main>
 
     <!-- Features Section -->
-    <section id="features" class="py-24 px-4">
-        <div class="container mx-auto">
-            <div class="text-center mb-16">
-                <h2 class="text-4xl md:text-5xl font-bold mb-4">Everything You Need</h2>
-                <p class="text-xl text-gray-400">Powerful features to create your perfect wallpaper</p>
-            </div>
+    <section class="relative z-10 px-6 py-24">
+        <div class="max-w-6xl mx-auto">
+            <h2 class="text-3xl md:text-4xl font-bold text-center mb-16">Why Choose Us</h2>
 
-            <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
-                <!-- Feature 1 -->
-                <div class="glass-primary p-8 rounded-3xl hover:scale-105 transition-transform">
-                    <div class="text-4xl mb-4">🌃</div>
-                    <h3 class="text-2xl font-bold mb-3">17 Unique Genres</h3>
-                    <p class="text-gray-400">From Cyberpunk to Nature, Fantasy to Abstract. Every style you can imagine.
-                    </p>
-                </div>
-
-                <!-- Feature 2 -->
-                <div class="glass-primary p-8 rounded-3xl hover:scale-105 transition-transform">
-                    <div class="text-4xl mb-4">🎨</div>
-                    <h3 class="text-2xl font-bold mb-3">20 Art Styles</h3>
-                    <p class="text-gray-400">Oil painting, neon, watercolor, pixel art, and more. Mix and match freely.
-                    </p>
-                </div>
-
-                <!-- Feature 3 -->
-                <div class="glass-primary p-8 rounded-3xl hover:scale-105 transition-transform">
-                    <div class="text-4xl mb-4">⚡</div>
-                    <h3 class="text-2xl font-bold mb-3">Instant Generation</h3>
-                    <p class="text-gray-400">Get your wallpaper in seconds. No waiting, no queues.</p>
-                </div>
-
-                <!-- Feature 4 -->
-                <div class="glass-primary p-8 rounded-3xl hover:scale-105 transition-transform">
-                    <div class="text-4xl mb-4">📱</div>
-                    <h3 class="text-2xl font-bold mb-3">Mobile & Desktop</h3>
-                    <p class="text-gray-400">Perfect fit for any device. Switch aspect ratios with one click.</p>
-                </div>
-
-                <!-- Feature 5 -->
-                <div class="glass-primary p-8 rounded-3xl hover:scale-105 transition-transform">
-                    <div class="text-4xl mb-4">👥</div>
-                    <h3 class="text-2xl font-bold mb-3">Community Gallery</h3>
-                    <p class="text-gray-400">Share your creations and get inspired by others.</p>
-                </div>
-
-                <!-- Feature 6 -->
-                <div class="glass-primary p-8 rounded-3xl hover:scale-105 transition-transform">
-                    <div class="text-4xl mb-4">🎯</div>
-                    <h3 class="text-2xl font-bold mb-3">Custom Colors</h3>
-                    <p class="text-gray-400">Add your own color palette or let AI surprise you.</p>
-                </div>
-            </div>
-        </div>
-    </section>
-
-    <!-- How It Works -->
-    <section id="how-it-works" class="py-24 px-4 bg-gradient-to-b from-transparent to-purple-900/10">
-        <div class="container mx-auto">
-            <div class="text-center mb-16">
-                <h2 class="text-4xl md:text-5xl font-bold mb-4">Create in 3 Simple Steps</h2>
-                <p class="text-xl text-gray-400">No complex prompts. Just pure creativity.</p>
-            </div>
-
-            <div class="max-w-4xl mx-auto space-y-16">
-                <!-- Step 1 -->
-                <div class="flex flex-col md:flex-row gap-8 items-center">
-                    <div class="flex-1">
-                        <div
-                            class="inline-block bg-purple-500 text-white font-bold text-2xl w-12 h-12 rounded-full flex items-center justify-center mb-4">
-                            1</div>
-                        <h3 class="text-3xl font-bold mb-3">Choose Your Style</h3>
-                        <p class="text-gray-400 text-lg">Select from 17 genres like Cyberpunk, Nature, or Fantasy. Then
-                            pick an art style - oil painting, neon, watercolor, or pixel art.</p>
+            <div class="grid md:grid-cols-3 gap-8">
+                <div class="glass-main rounded-[2rem] p-8 text-center">
+                    <div class="w-16 h-16 mx-auto mb-4 rounded-full glass-pill flex items-center justify-center">
+                        <span class="material-symbols-outlined text-[32px]">auto_awesome</span>
                     </div>
-                    <div class="flex-1 glass-primary p-4 rounded-2xl">
-                        <img src="https://via.placeholder.com/400x300/1a1a1a/ffffff?text=Step+1" alt="Choose style"
-                            class="rounded-xl w-full">
-                    </div>
+                    <h3 class="text-xl font-bold mb-3">AI-Powered</h3>
+                    <p class="text-white/60">Advanced AI creates unique wallpapers tailored to your style</p>
                 </div>
 
-                <!-- Step 2 -->
-                <div class="flex flex-col md:flex-row-reverse gap-8 items-center">
-                    <div class="flex-1">
-                        <div
-                            class="inline-block bg-purple-500 text-white font-bold text-2xl w-12 h-12 rounded-full flex items-center justify-center mb-4">
-                            2</div>
-                        <h3 class="text-3xl font-bold mb-3">Customize Colors</h3>
-                        <p class="text-gray-400 text-lg">Add your preferred colors or use the "Surprise Me" button for
-                            random combinations. Toggle between mobile and desktop formats.</p>
+                <div class="glass-main rounded-[2rem] p-8 text-center">
+                    <div class="w-16 h-16 mx-auto mb-4 rounded-full glass-pill flex items-center justify-center">
+                        <span class="material-symbols-outlined text-[32px]">palette</span>
                     </div>
-                    <div class="flex-1 glass-primary p-4 rounded-2xl">
-                        <img src="https://via.placeholder.com/400x300/1a1a1a/ffffff?text=Step+2" alt="Customize"
-                            class="rounded-xl w-full">
-                    </div>
+                    <h3 class="text-xl font-bold mb-3">Endless Styles</h3>
+                    <p class="text-white/60">Choose from dozens of genres and artistic styles</p>
                 </div>
 
-                <!-- Step 3 -->
-                <div class="flex flex-col md:flex-row gap-8 items-center">
-                    <div class="flex-1">
-                        <div
-                            class="inline-block bg-purple-500 text-white font-bold text-2xl w-12 h-12 rounded-full flex items-center justify-center mb-4">
-                            3</div>
-                        <h3 class="text-3xl font-bold mb-3">Generate & Share</h3>
-                        <p class="text-gray-400 text-lg">Click "Create Wallpaper" and get your stunning result in
-                            seconds. Download or share with the community!</p>
+                <div class="glass-main rounded-[2rem] p-8 text-center">
+                    <div class="w-16 h-16 mx-auto mb-4 rounded-full glass-pill flex items-center justify-center">
+                        <span class="material-symbols-outlined text-[32px]">groups</span>
                     </div>
-                    <div class="flex-1 glass-primary p-4 rounded-2xl">
-                        <img src="https://via.placeholder.com/400x300/1a1a1a/ffffff?text=Step+3" alt="Generate"
-                            class="rounded-xl w-full">
-                    </div>
+                    <h3 class="text-xl font-bold mb-3">Community</h3>
+                    <p class="text-white/60">Share your creations and discover amazing wallpapers</p>
                 </div>
-            </div>
-        </div>
-    </section>
-
-    <!-- Community Highlights -->
-    <section id="community" class="py-24 px-4">
-        <div class="container mx-auto">
-            <div class="text-center mb-16">
-                <h2 class="text-4xl md:text-5xl font-bold mb-4">Join Our Creative Community</h2>
-                <p class="text-xl text-gray-400">Thousands of creators sharing their masterpieces</p>
-            </div>
-
-            <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-12">
-                <!-- Sample wallpapers - replace with actual community content -->
-                <div class="aspect-[9/16] bg-gradient-to-br from-purple-500 to-pink-500 rounded-2xl"></div>
-                <div class="aspect-[9/16] bg-gradient-to-br from-blue-500 to-cyan-500 rounded-2xl"></div>
-                <div class="aspect-[9/16] bg-gradient-to-br from-green-500 to-emerald-500 rounded-2xl"></div>
-                <div class="aspect-[9/16] bg-gradient-to-br from-orange-500 to-red-500 rounded-2xl"></div>
-            </div>
-
-            <div class="text-center">
-                <a href="community.html" class="btn-primary text-lg px-8 py-4 inline-block">
-                    Explore Community Gallery →
-                </a>
             </div>
         </div>
     </section>
 
     <!-- CTA Section -->
-    <section class="py-24 px-4 bg-gradient-to-b from-purple-900/10 to-transparent">
-        <div class="container mx-auto text-center">
-            <h2 class="text-4xl md:text-6xl font-bold mb-6">
-                Ready to Create Your<br>
-                <span class="gradient-text">Perfect Wallpaper?</span>
-            </h2>
-            <p class="text-xl text-gray-300 mb-8 max-w-2xl mx-auto">
-                Join thousands of creators. No credit card required. Start for free.
+    <section class="relative z-10 px-6 py-24">
+        <div class="max-w-4xl mx-auto glass-main rounded-[3rem] p-12 text-center">
+            <h2 class="text-3xl md:text-5xl font-bold mb-6">Ready to Create?</h2>
+            <p class="text-lg text-white/60 mb-8 max-w-2xl mx-auto">
+                Join thousands of creators making stunning wallpapers every day
             </p>
-            <a href="index.html" class="btn-primary text-xl px-10 py-5 inline-block">
-                Start Creating Now
+            <a href="index.html"
+                class="inline-block px-12 py-5 glass-pill rounded-full font-bold text-lg tracking-wide transition-all active:scale-95 hover:bg-white/20">
+                Get Started Free
             </a>
         </div>
     </section>
 
     <!-- Footer -->
-    <footer class="border-t border-white/10 py-12 px-4">
-        <div class="container mx-auto">
-            <div class="grid md:grid-cols-4 gap-8 mb-8">
-                <div>
-                    <div class="flex items-center gap-2 mb-4">
-                        <span class="text-2xl">🎨</span>
-                        <span class="font-bold">Wallpaper Studio Pro</span>
-                    </div>
-                    <p class="text-gray-400 text-sm">Create stunning AI wallpapers in seconds</p>
-                </div>
-
-                <div>
-                    <h4 class="font-bold mb-4">Product</h4>
-                    <ul class="space-y-2 text-sm text-gray-400">
-                        <li><a href="index.html" class="hover:text-white">Create</a></li>
-                        <li><a href="community.html" class="hover:text-white">Community</a></li>
-                        <li><a href="#features" class="hover:text-white">Features</a></li>
-                    </ul>
-                </div>
-
-                <div>
-                    <h4 class="font-bold mb-4">Resources</h4>
-                    <ul class="space-y-2 text-sm text-gray-400">
-                        <li><a href="#how-it-works" class="hover:text-white">How It Works</a></li>
-                        <li><a href="#" class="hover:text-white">FAQ</a></li>
-                        <li><a href="#" class="hover:text-white">Support</a></li>
-                    </ul>
-                </div>
-
-                <div>
-                    <h4 class="font-bold mb-4">Legal</h4>
-                    <ul class="space-y-2 text-sm text-gray-400">
-                        <li><a href="#" class="hover:text-white">Privacy Policy</a></li>
-                        <li><a href="#" class="hover:text-white">Terms of Service</a></li>
-                    </ul>
-                </div>
-            </div>
-
-            <div class="border-t border-white/10 pt-8 text-center text-gray-400 text-sm">
-                <p>&copy; 2026 Wallpaper Studio Pro. All rights reserved.</p>
-            </div>
+    <footer class="relative z-10 px-6 py-12 border-t border-white/10">
+        <div class="max-w-6xl mx-auto text-center text-white/40 text-sm">
+            <p>© 2024 Wallpaper Studio Pro. All rights reserved.</p>
         </div>
     </footer>
 
-    <script>
-        lucide.createIcons();
-
-        // Smooth scroll
-        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
-            anchor.addEventListener('click', function (e) {
-                e.preventDefault();
-                const target = document.querySelector(this.getAttribute('href'));
-                if (target) {
-                    target.scrollIntoView({ behavior: 'smooth', block: 'start' });
-                }
-            });
-        });
-    </script>
+    <div class="h-24"></div>
 </body>
 
 </html>
