@@ -104,6 +104,33 @@ body::after {
     }
 }
 
+/* Skeleton Screens */
+.skeleton {
+    background: linear-gradient(90deg,
+            rgba(255, 255, 255, 0.05) 25%,
+            rgba(255, 255, 255, 0.1) 37%,
+            rgba(255, 255, 255, 0.05) 63%);
+    background-size: 400% 100%;
+    animation: skeleton-loading 1.4s ease infinite;
+}
+
+@keyframes skeleton-loading {
+    0% {
+        background-position: 100% 50%;
+    }
+
+    100% {
+        background-position: 0% 50%;
+    }
+}
+
+.skeleton-card {
+    aspect-ratio: 1/1.5;
+    border-radius: 1.25rem;
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
 /* =========================================
    2. WEBGL & FALLBACK
    ========================================= */
@@ -842,4 +869,47 @@ body::after {
         right: 5px;
         padding: 5px;
     }
+}
+
+/* Result Modal premium transitions */
+#result-modal {
+    transition: all 0.5s cubic-bezier(0.32, 0.72, 0, 1);
+    opacity: 0;
+    pointer-events: none;
+    display: flex !important;
+}
+
+#result-modal.hidden {
+    opacity: 0;
+    pointer-events: none;
+}
+
+#result-modal:not(.hidden) {
+    opacity: 1;
+    pointer-events: auto;
+}
+
+#result-modal #result-image {
+    transition: transform 0.6s cubic-bezier(0.32, 0.72, 0, 1);
+    transform: scale(0.9) translateY(20px);
+}
+
+#result-modal:not(.hidden) #result-image {
+    transform: scale(1) translateY(0);
+}
+
+#result-modal .z-50 {
+    transition: opacity 0.5s ease 0.2s;
+}
+
+#result-modal.hidden .z-50 {
+    opacity: 0;
+}
+
+#result-modal:not(.hidden) .z-50 {
+    opacity: 1;
+}
+
+.magnetic-btn {
+    transition: transform 0.2s ease-out;
 }

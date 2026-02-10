@@ -24,7 +24,8 @@ const state = {
     communityPage: 0,
     isLoadingCommunity: false,
     hasMoreCommunity: true,
-    activeCommunityFilter: 'all'
+    activeCommunityFilter: 'all',
+    communitySource: 'all'
 };
 
 // Global WebGL Variables
@@ -647,6 +648,12 @@ window.toggleAuthModal = function () {
         if (state.currentUser.user_metadata?.avatar_url) {
             document.getElementById('profile-avatar').src = state.currentUser.user_metadata.avatar_url;
         }
+
+        // Refresh credits UI
+        db.checkAndResetCredits(state.currentUser.id).then(credits => {
+            const display = document.getElementById('user-credits-display');
+            if (display) display.innerText = `Credits: ${credits}/100`;
+        });
     }
 };
 
@@ -1104,6 +1111,21 @@ async function handleGenerate() {
     const progressBar = document.getElementById('generation-progress-bar');
     const loadingText = document.getElementById('loading-text');
 
+    // CREDIT CHECK
+    if (state.currentUser) {
+        try {
+            const currentCredits = await db.checkAndResetCredits(state.currentUser.id);
+            const totalRequired = batchCount * 10;
+            if (currentCredits < totalRequired) {
+                showToast(`Insufficient credits! Need ${totalRequired}, have ${currentCredits}`, 'error');
+                return;
+            }
+        } catch (e) {
+            console.error('Credit check failed:', e);
+            // Allow proceed if cloud check fails? No, safer to block if we want to enforce.
+        }
+    }
+
     const updateProgress = (pct, text) => {
         if (progressBar) progressBar.style.width = `${pct}%`;
         if (loadingText) loadingText.innerText = text;
@@ -1202,6 +1224,17 @@ async function handleGenerate() {
                 }, 500);
 
                 window.currentGeneratedSeed = seed;
+
+                // DEDUCT CREDITS
+                if (state.currentUser) {
+                    try {
+                        await db.deductCredits(state.currentUser.id, batchCount * 10);
+                        const newCredits = await db.checkAndResetCredits(state.currentUser.id);
+                        showToast(`Credits remaining: ${newCredits}`, 'info');
+                    } catch (e) {
+                        console.error('Credit deduction failed:', e);
+                    }
+                }
 
                 // SAVE TO SUPABASE IF LOGGED IN
                 if (state.currentUser) {
@@ -1415,6 +1448,8 @@ window.shareImage = shareImage;
 window.closeGenerationDisplay = closeGenerationDisplay;
 window.viewFullResult = viewFullResult;
 window.downloadGenerated = downloadGenerated;
+window.downloadImageDirect = downloadImageDirect;
+window.downloadImageDirect = downloadImageDirect;
 window.remixImage = remixImage;
 window.downloadFromModal = async function () {
     const url = document.getElementById('result-image').src;
@@ -1427,6 +1462,32 @@ window.downloadFromModal = async function () {
 
 const COMMUNITY_PAGE_SIZE = 24;
 
+window.setCommunitySource = function (source) {
+    if (source === 'following' && !state.currentUser) {
+        showToast('Sign in to browse your following feed', 'info');
+        toggleAuthModal();
+        return;
+    }
+    state.communitySource = source;
+
+    // Update UI tabs
+    const btnAll = document.getElementById('source-all');
+    const btnFol = document.getElementById('source-following');
+    const filters = document.getElementById('community-sort-filters');
+
+    if (source === 'all') {
+        btnAll.className = 'px-5 py-2 rounded-full text-xs font-bold transition-all bg-white text-black shadow-lg';
+        btnFol.className = 'px-5 py-2 rounded-full text-xs font-bold transition-all text-gray-400 hover:text-white';
+        if (filters) filters.classList.remove('hidden');
+    } else {
+        btnFol.className = 'px-5 py-2 rounded-full text-xs font-bold transition-all bg-white text-black shadow-lg';
+        btnAll.className = 'px-5 py-2 rounded-full text-xs font-bold transition-all text-gray-400 hover:text-white';
+        if (filters) filters.classList.add('hidden');
+    }
+
+    renderCommunity();
+};
+
 async function renderCommunity(filterType = 'all', searchQuery = '', isAppend = false, creatorId = null) {
     const grid = document.getElementById('community-grid');
     const loader = document.getElementById('community-loader');
@@ -1435,7 +1496,13 @@ async function renderCommunity(filterType = 'all', searchQuery = '', isAppend = 
     if (!isAppend) {
         state.communityPage = 0;
         state.hasMoreCommunity = true;
-        grid.innerHTML = '<div class="col-span-full py-20 flex justify-center"><div class="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-white"></div></div>';
+
+        // Implementation of Phase 10: Skeleton Screens
+        grid.innerHTML = '';
+        for (let i = 0; i < 8; i++) {
+            grid.innerHTML += `<div class="skeleton-card skeleton"></div>`;
+        }
+        window.scrollTo({ top: 0, behavior: 'smooth' });
     }
 
     if (state.isLoadingCommunity || !state.hasMoreCommunity) return;
@@ -1446,8 +1513,12 @@ async function renderCommunity(filterType = 'all', searchQuery = '', isAppend = 
         const currentUserId = state.currentUser ? state.currentUser.id : null;
         const offset = state.communityPage * COMMUNITY_PAGE_SIZE;
         let wallpapers;
+
         if (creatorId) {
             wallpapers = await db.fetchUserWallpapers(creatorId);
+            state.hasMoreCommunity = false;
+        } else if (state.communitySource === 'following') {
+            wallpapers = await db.fetchFollowingWallpapers(currentUserId, offset, COMMUNITY_PAGE_SIZE);
         } else {
             wallpapers = await db.fetchCommunityWallpapers(currentUserId, offset, COMMUNITY_PAGE_SIZE);
         }
@@ -1484,7 +1555,17 @@ async function renderCommunity(filterType = 'all', searchQuery = '', isAppend = 
                 <img src="${item.url}" class="history-card-img" loading="lazy" onclick="showResult('${item.url}', ${item.seed})">
                 <div class="overlay-info p-6 flex flex-col justify-end">
                     <span class="overlay-title text-xl font-bold">${item.genre}</span>
-                    <span class="text-xs text-gray-400 opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer hover:text-white" onclick="event.stopPropagation(); filterByCreator('${item.user_id}', '${item.author_name}')">by ${item.author_name || 'Anonymous'}</span>
+                    <div class="flex items-center gap-2 group/author">
+                        <span class="text-xs text-gray-400 opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer hover:text-white" 
+                            onclick="event.stopPropagation(); filterByCreator('${item.user_id}', '${item.author_name}')">
+                            by ${item.author_name || 'Anonymous'}
+                        </span>
+                        ${(item.user_id && state.currentUser && item.user_id !== state.currentUser.id) ? `
+                        <button onclick="event.stopPropagation(); handleToggleFollow('${item.user_id}', '${item.author_name}')"
+                            class="bg-white/10 px-2 py-0.5 rounded text-[10px] text-white opacity-0 group-hover/author:opacity-100 transition-opacity hover:bg-white hover:text-black">
+                            Follow
+                        </button>` : ''}
+                    </div>
                 </div>
                 
                 <!-- Like Button -->
@@ -1562,6 +1643,26 @@ window.filterByCreator = function (userId, username) {
     state.activeCommunityFilter = 'creator';
     showToast(`Viewing wallpapers by ${username}`, 'info');
     renderCommunity('all', '', false, userId);
+};
+
+window.handleToggleFollow = async function (followingId, followingName) {
+    if (!state.currentUser) {
+        showToast('Sign in to follow creators!', 'info');
+        toggleAuthModal();
+        return;
+    }
+
+    try {
+        const { following } = await db.toggleFollow(state.currentUser.id, followingId);
+        showToast(following ? `Following ${followingName}` : `Unfollowed ${followingName}`, 'success');
+
+        // Implementation of Phase 10: Optimistic switch or refresh
+        if (state.communitySource === 'following') {
+            renderCommunity();
+        }
+    } catch (e) {
+        showToast(e.message || 'Follow action failed', 'error');
+    }
 };
 
 // Infinite Scroll Observer

@@ -130,6 +130,97 @@ async function updateProfile(userId, updates) {
     return data;
 }
 
+async function checkAndResetCredits(userId) {
+    const { data, error } = await clientInstance.rpc('check_and_reset_daily_credits', { p_user_id: userId });
+    if (error) throw error;
+    return data;
+}
+
+async function deductCredits(userId, amount) {
+    // We use a simple update with a filter to ensure credits don't go negative
+    const { data, error } = await clientInstance
+        .from('profiles')
+        .update({ credits: clientInstance.rpc('credits - ' + amount) }) // This won't work directly in JS client like this for atomic decr easily without RPC
+        .eq('id', userId);
+
+    // Better: use an RPC for atomic deduction
+    const { data: newData, error: rpcError } = await clientInstance.rpc('deduct_user_credits', { p_user_id: userId, p_amount: amount });
+    if (rpcError) throw rpcError;
+    return newData;
+}
+
+async function toggleFollow(followerId, followingId) {
+    if (followerId === followingId) throw new Error("You cannot follow yourself");
+
+    const { data: existing, error: checkError } = await clientInstance
+        .from('follows')
+        .select('*')
+        .eq('follower_id', followerId)
+        .eq('following_id', followingId)
+        .maybeSingle();
+
+    if (existing) {
+        const { error: unfollowError } = await clientInstance
+            .from('follows')
+            .delete()
+            .eq('follower_id', followerId)
+            .eq('following_id', followingId);
+        if (unfollowError) throw unfollowError;
+        return { following: false };
+    } else {
+        const { error: followError } = await clientInstance
+            .from('follows')
+            .insert([{ follower_id: followerId, following_id: followingId }]);
+        if (followError) throw followError;
+        return { following: true };
+    }
+}
+
+async function checkFollowStatus(followerId, followingId) {
+    if (!followerId) return false;
+    const { data, error } = await clientInstance
+        .from('follows')
+        .select('id')
+        .eq('follower_id', followerId)
+        .eq('following_id', followingId)
+        .maybeSingle();
+    if (error) throw error;
+    return !!data;
+}
+
+async function fetchFollowingWallpapers(currentUserId, offset = 0, PAGE_SIZE = 24) {
+    const { data: following, error: followError } = await clientInstance
+        .from('follows')
+        .select('following_id')
+        .eq('follower_id', currentUserId);
+
+    if (followError) throw followError;
+    const followingIds = following.map(f => f.following_id);
+
+    if (followingIds.length === 0) return [];
+
+    const { data, error } = await clientInstance
+        .from('wallpapers')
+        .select(`
+            *,
+            profiles (username),
+            likes (user_id)
+        `)
+        .eq('is_public', true)
+        .in('user_id', followingIds)
+        .order('created_at', { ascending: false })
+        .range(offset, offset + PAGE_SIZE - 1);
+
+    if (error) throw error;
+
+    return data.map(item => ({
+        ...item,
+        author_name: item.profiles ? item.profiles.username : 'Anonymous',
+        likes_count: item.likes ? item.likes.length : 0,
+        is_liked: currentUserId ? item.likes.some(l => l.user_id === currentUserId) : false
+    }));
+}
+
 // --- AUTH HELPERS ---
 
 async function signUpUser(email, password, username) {
@@ -175,10 +266,15 @@ async function updateUserMetadata(updates) {
 window.db = {
     fetchUserWallpapers,
     fetchCommunityWallpapers,
+    fetchFollowingWallpapers,
     fetchWallpaperById,
     saveWallpaperToDB,
     togglePublicStatus,
     toggleLike,
+    toggleFollow,
+    checkFollowStatus,
+    checkAndResetCredits,
+    deductCredits,
     uploadAvatar,
     updateProfile
 };

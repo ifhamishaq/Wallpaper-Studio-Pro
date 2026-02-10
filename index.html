@@ -516,10 +516,19 @@
                     <input type="text" id="community-search" placeholder="Search by prompt or genre..."
                         class="w-full bg-white/5 border border-white/10 rounded-2xl p-3 pl-12 text-white focus:outline-none focus:border-white/30 transition">
                 </div>
-                <div class="flex gap-2">
+                <div class="flex gap-2 p-1 bg-white/5 rounded-full border border-white/10">
+                    <button onclick="setCommunitySource('all')"
+                        class="px-5 py-2 rounded-full text-xs font-bold transition-all bg-white text-black shadow-lg"
+                        id="source-all">Exploration</button>
+                    <button onclick="setCommunitySource('following')"
+                        class="px-5 py-2 rounded-full text-xs font-bold transition-all text-gray-400 hover:text-white"
+                        id="source-following">Following</button>
+                </div>
+                <div class="h-4 w-px bg-white/10 hidden sm:block"></div>
+                <div class="flex gap-2" id="community-sort-filters">
                     <button onclick="filterCommunity('all')"
                         class="px-5 py-2.5 bg-white/10 border border-white/20 rounded-full text-xs font-bold hover:bg-white/20 transition active-filter"
-                        id="filter-all">All</button>
+                        id="filter-all">Newest</button>
                     <button onclick="filterCommunity('top')"
                         class="px-5 py-2.5 bg-white/5 border border-white/10 rounded-full text-xs font-bold hover:bg-white/10 transition"
                         id="filter-top">Popular</button>
@@ -597,8 +606,14 @@
             <div id="profile-form" class="hidden">
                 <div class="flex justify-between items-center mb-6">
                     <h3 class="text-2xl font-bold">My Profile</h3>
-                    <button onclick="handleUserLogout()" class="text-xs text-red-400 hover:text-red-300">Sign
-                        Out</button>
+                    <div class="flex flex-col items-end">
+                        <button onclick="handleUserLogout()" class="text-xs text-red-400 hover:text-red-300">Sign
+                            Out</button>
+                        <div id="user-credits-display"
+                            class="text-[10px] text-accent font-bold mt-1 bg-white/5 px-2 py-0.5 rounded-full border border-white/10">
+                            Credits: --/100
+                        </div>
+                    </div>
                 </div>
 
                 <div class="flex flex-col items-center mb-6">
