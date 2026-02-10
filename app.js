@@ -700,6 +700,12 @@ function handleUserLogin(user) {
         userBtn.title = `My Account (${user.email})`;
     }
     syncLocalToCloud();
+
+    // Refresh credits UI
+    db.checkAndResetCredits(user.id).then(credits => {
+        const display = document.getElementById('user-credits-display');
+        if (display) display.innerText = `Credits: ${credits}/100`;
+    });
 }
 
 function handleUserLogout() {
@@ -1448,7 +1454,6 @@ window.shareImage = shareImage;
 window.closeGenerationDisplay = closeGenerationDisplay;
 window.viewFullResult = viewFullResult;
 window.downloadGenerated = downloadGenerated;
-window.downloadImageDirect = downloadImageDirect;
 window.downloadImageDirect = downloadImageDirect;
 window.remixImage = remixImage;
 window.downloadFromModal = async function () {

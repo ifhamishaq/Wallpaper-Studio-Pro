@@ -913,3 +913,28 @@ body::after {
 .magnetic-btn {
     transition: transform 0.2s ease-out;
 }
+
+/* Batch Generation Results Grid */
+.batch-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1.25rem;
+    width: 100%;
+    margin-top: 1.5rem;
+}
+
+.batch-grid-item {
+    width: 100%;
+    aspect-ratio: 16/9;
+    background: #111;
+    border-radius: 12px;
+    cursor: pointer;
+    border: 2px solid transparent;
+    transition: all 0.3s ease;
+    object-fit: cover;
+}
+
+.batch-grid-item:hover {
+    border-color: #00ff88;
+    transform: scale(1.02);
+}
