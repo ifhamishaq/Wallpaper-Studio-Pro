@@ -14,14 +14,21 @@ const state = {
     customColor: null,
     favorites: JSON.parse(localStorage.getItem('wallpaper_favorites') || '[]'),
     advancedMode: false,
+    batchMode: false,
     seed: null,
     numSteps: 4,
     historyFilter: 'all',
-    isPromptManuallyEdited: false 
+    activeView: 'create',
+    currentUser: null,
+    isPromptManuallyEdited: false,
+    communityPage: 0,
+    isLoadingCommunity: false,
+    hasMoreCommunity: true,
+    activeCommunityFilter: 'all'
 };
 
 // Global WebGL Variables
-let targetColor = new THREE.Color(0x444444); 
+let targetColor = new THREE.Color(0x444444);
 let particleMaterial = null;
 
 // Global Timer for Typewriter Effect
@@ -78,18 +85,18 @@ async function copyToClipboard(text) {
 // ============================================================================
 window.onload = () => {
     if (window.lucide) lucide.createIcons();
-    
-    loadPreferences(); 
-    
-    initCarousel();      
-    initSwipeGestures(); 
-    initParallax();      
-    initWebGL();         
-    
+
+    loadPreferences();
+
+    initCarousel();
+    initSwipeGestures();
+    initParallax();
+    initWebGL();
+
     // New UI/UX Initializations
-    initMagneticButtons(); // Category B: Tactile feel
-    initShinyBorders();    // Category A: Visual polish
-    
+    initMagneticButtons();
+    initShinyBorders();
+
     initKeyboardNavigation();
     renderHistory();
     renderFavorites();
@@ -98,6 +105,20 @@ window.onload = () => {
     const generateBtn = document.getElementById('generate-button');
     if (generateBtn) generateBtn.addEventListener('click', handleGenerate);
 
+    // Initial Auth Check
+    if (window.auth) {
+        auth.getCurrentUser().then(user => {
+            if (user) handleUserLogin(user);
+        });
+    }
+
+    // Supabase Auth Listener
+    if (window.supabaseClient) {
+        supabaseClient.auth.onAuthStateChange((event, session) => {
+            if (event === 'SIGNED_IN') handleUserLogin(session.user);
+            if (event === 'SIGNED_OUT') handleUserLogout();
+        });
+    }
     const promptInput = document.getElementById('custom-prompt');
     if (promptInput) {
         promptInput.addEventListener('input', () => {
@@ -106,6 +127,8 @@ window.onload = () => {
     }
 
     updateCarouselUI();
+    renderHistory();
+    renderFavorites();
 };
 
 function loadPreferences() {
@@ -141,7 +164,7 @@ function initCarousel() {
         track.innerHTML = '';
         items.forEach((item) => {
             const el = document.createElement('div');
-            el.className = 'carousel-item'; 
+            el.className = 'carousel-item';
             el.style.backgroundImage = `url('${item.image}')`;
             el.innerHTML = `<div class="w-full h-full carousel-overlay"></div>`;
             track.appendChild(el);
@@ -175,7 +198,7 @@ function updateCarouselUI() {
             else child.classList.remove('is-active');
         });
     }
-    
+
     // Update Labels
     const genreLabel = document.getElementById('genre-label');
     const styleLabel = document.getElementById('style-label');
@@ -186,7 +209,7 @@ function updateCarouselUI() {
     const newColorHex = GENRES[state.activeGenreIndex].color || 0x444444;
     targetColor.setHex(newColorHex);
     updateAuroraColors(newColorHex);
-    
+
     // Category B: Typewriter Prompt
     updateCustomPromptPlaceholder();
     savePreferences();
@@ -198,7 +221,7 @@ function updateAuroraColors(hexColor) {
     const r = color.r * 255;
     const g = color.g * 255;
     const b = color.b * 255;
-    
+
     // Set CSS variable for gradients if supported in CSS
     document.documentElement.style.setProperty('--aurora-color', `rgba(${r}, ${g}, ${b}, 0.4)`);
     document.documentElement.style.setProperty('--aurora-color-secondary', `rgba(${r}, ${g}, ${b}, 0.1)`);
@@ -207,7 +230,7 @@ function updateAuroraColors(hexColor) {
 // Category B: Typewriter Effect for Prompt
 function updateCustomPromptPlaceholder() {
     if (!GENRES || !STYLES) return;
-    
+
     const genre = GENRES[state.activeGenreIndex].prompt;
     const style = STYLES[state.activeStyleIndex].prompt;
     const color = state.selectedColorBias ? `, ${state.selectedColorBias} color palette` : '';
@@ -216,17 +239,17 @@ function updateCustomPromptPlaceholder() {
 
     const area = document.getElementById('custom-prompt');
     if (!area) return;
-    
+
     area.placeholder = text;
 
     if (!state.isPromptManuallyEdited) {
         // Clear previous timeout to avoid overlapping typing
         if (typewriterTimeout) clearTimeout(typewriterTimeout);
-        
+
         let i = 0;
         area.value = "";
-        const speed = 10; // ms per char
-        
+        const speed = 1; // ms per char
+
         function type() {
             if (i < text.length) {
                 area.value += text.charAt(i);
@@ -244,17 +267,19 @@ function updateCustomPromptPlaceholder() {
 
 // B5: Magnetic Buttons
 function initMagneticButtons() {
-    if (isMobileDevice()) return; 
-    
-    const btns = document.querySelectorAll('.btn-haptic, button');
-    
+    const prefersReducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    if (isMobileDevice() || prefersReducedMotion) return;
+
+    // Select all buttons and interactive elements
+    const btns = document.querySelectorAll('.btn-haptic, button, .catalog-btn, [role="button"]');
+
     btns.forEach(btn => {
         btn.addEventListener('mousemove', (e) => {
             const rect = btn.getBoundingClientRect();
             // Calculate distance from center
             const x = e.clientX - rect.left - rect.width / 2;
             const y = e.clientY - rect.top - rect.height / 2;
-            
+
             // Move button slightly towards mouse (Magnetic effect)
             btn.style.transform = `translate(${x * 0.2}px, ${y * 0.2}px)`;
         });
@@ -262,15 +287,15 @@ function initMagneticButtons() {
         btn.addEventListener('mouseleave', () => {
             btn.style.transform = 'translate(0px, 0px)';
         });
-        
+
         // B8: Interactive Squeeze Click
         btn.addEventListener('mousedown', () => {
-             btn.style.transform = 'scale(0.95, 0.95)';
+            btn.style.transform = 'scale(0.95, 0.95)';
         });
-        
+
         btn.addEventListener('mouseup', () => {
-             btn.style.transform = 'scale(1.05, 1.05)';
-             setTimeout(() => btn.style.transform = 'translate(0,0)', 150);
+            btn.style.transform = 'scale(1.05, 1.05)';
+            setTimeout(() => btn.style.transform = 'translate(0,0)', 150);
         });
     });
 }
@@ -278,13 +303,13 @@ function initMagneticButtons() {
 // A4: Shiny Borders (Glassmorphic Glow)
 function initShinyBorders() {
     const cards = document.querySelectorAll('.split-card-container, #advanced-controls');
-    
+
     document.addEventListener('mousemove', (e) => {
         cards.forEach(card => {
             const rect = card.getBoundingClientRect();
             const x = e.clientX - rect.left;
             const y = e.clientY - rect.top;
-            
+
             card.style.setProperty('--mouse-x', `${x}px`);
             card.style.setProperty('--mouse-y', `${y}px`);
         });
@@ -295,18 +320,18 @@ function initShinyBorders() {
 function triggerConfetti() {
     const count = 100;
     const origin = { x: window.innerWidth / 2, y: window.innerHeight / 2 };
-    
+
     for (let i = 0; i < count; i++) {
         const particle = document.createElement('div');
         particle.classList.add('confetti'); // Ensure this class is defined in CSS (position fixed, etc)
-        
+
         // Random properties
         const angle = Math.random() * Math.PI * 2;
         const velocity = 2 + Math.random() * 6;
         const tx = Math.cos(angle) * velocity * 100;
         const ty = Math.sin(angle) * velocity * 100;
         const color = ['#ff0', '#f0f', '#0ff', '#0f0', '#fff'][Math.floor(Math.random() * 5)];
-        
+
         particle.style.cssText = `
             position: fixed;
             left: ${origin.x}px;
@@ -320,15 +345,15 @@ function triggerConfetti() {
             transition: all 1s ease-out;
             opacity: 1;
         `;
-        
+
         document.body.appendChild(particle);
-        
+
         // Animate
         requestAnimationFrame(() => {
             particle.style.transform = `translate(${tx}px, ${ty}px) scale(0)`;
             particle.style.opacity = '0';
         });
-        
+
         // Cleanup
         setTimeout(() => particle.remove(), 1000);
     }
@@ -349,19 +374,19 @@ function checkPromptConflict() {
             const oldPrompt = document.getElementById('custom-prompt').value;
             navigator.clipboard.writeText(oldPrompt).then(() => {
                 showToast("Old prompt copied to clipboard", "info");
-            }).catch(() => {});
+            }).catch(() => { });
 
             state.isPromptManuallyEdited = false;
-            document.getElementById('custom-prompt').value = ''; 
-            return true; 
+            document.getElementById('custom-prompt').value = '';
+            return true;
         }
-        return false; 
+        return false;
     }
-    return true; 
+    return true;
 }
 
 function nextSlide(type) {
-    if (!checkPromptConflict()) return; 
+    if (!checkPromptConflict()) return;
 
     if (type === 'genre') {
         state.activeGenreIndex = (state.activeGenreIndex + 1) % GENRES.length;
@@ -372,7 +397,7 @@ function nextSlide(type) {
 }
 
 function prevSlide(type) {
-    if (!checkPromptConflict()) return; 
+    if (!checkPromptConflict()) return;
 
     if (type === 'genre') {
         state.activeGenreIndex = (state.activeGenreIndex - 1 + GENRES.length) % GENRES.length;
@@ -383,10 +408,10 @@ function prevSlide(type) {
 }
 
 function randomize() {
-    state.isPromptManuallyEdited = false; 
+    state.isPromptManuallyEdited = false;
     const promptInput = document.getElementById('custom-prompt');
-    if(promptInput) promptInput.value = '';
-    
+    if (promptInput) promptInput.value = '';
+
     const overlay = document.getElementById('generation-overlay');
     if (overlay && !overlay.classList.contains('hidden')) {
         closeGenerationDisplay();
@@ -454,20 +479,35 @@ function initSwipeGestures() {
     };
     setupSwipe('genre-track', 'genre');
     setupSwipe('style-track', 'style');
+
+    // Add swipe logic for history drawer
+    const historyDrawer = document.getElementById('history-drawer');
+    if (historyDrawer) {
+        let drawerTouchStartX = 0;
+        historyDrawer.addEventListener('touchstart', e => drawerTouchStartX = e.changedTouches[0].screenX, { passive: true });
+        historyDrawer.addEventListener('touchend', e => {
+            const touchEndX = e.changedTouches[0].screenX;
+            // If swipe right (from left to right) and drawer is open
+            if (historyDrawer.classList.contains('translate-x-0') && touchEndX > drawerTouchStartX + 50) {
+                toggleHistory();
+            }
+        }, { passive: true });
+    }
 }
 
 function initParallax() {
+    const prefersReducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
     const container = document.getElementById('tilt-wrapper');
     const card = document.getElementById('main-card');
-    if (isMobileDevice() || !container || !card) return;
+    if (isMobileDevice() || !container || !card || prefersReducedMotion) return;
 
     document.addEventListener('mousemove', (e) => {
         const { clientX, clientY } = e;
-        const xPos = (clientX / window.innerWidth - 0.5) * 2; 
+        const xPos = (clientX / window.innerWidth - 0.5) * 2;
         const yPos = (clientY / window.innerHeight - 0.5) * 2;
         container.style.transform = `rotateX(${yPos * -10}deg) rotateY(${xPos * 10}deg)`;
     });
-    
+
     document.addEventListener('mouseleave', () => {
         container.style.transform = `rotateX(0deg) rotateY(0deg)`;
     });
@@ -511,7 +551,7 @@ function toggleAspectRatio() {
         container.classList.remove('desktop-mode');
         showToast('Mobile mode (1080x1920)', 'info', 2000);
     }
-    if(window.lucide) lucide.createIcons();
+    if (window.lucide) lucide.createIcons();
 }
 
 function setColorBias(color) {
@@ -533,19 +573,25 @@ function setCustomColor() {
 function toggleAdvancedControls() {
     state.advancedMode = !state.advancedMode;
     const panel = document.getElementById('advanced-controls');
-    panel.classList.toggle('expanded');
-    const btn = event.currentTarget;
-    const icon = btn.querySelector('i');
-    if (icon) {
-        icon.setAttribute('data-lucide', state.advancedMode ? 'chevron-up' : 'chevron-down');
-        if(window.lucide) lucide.createIcons();
+    if (!panel) return;
+
+    panel.classList.toggle('hidden');
+
+    // Toggle the chevron icon if it exists
+    const btn = window.event?.currentTarget;
+    if (btn) {
+        const icon = btn.querySelector('i');
+        if (icon) {
+            icon.setAttribute('data-lucide', panel.classList.contains('hidden') ? 'settings' : 'chevron-up');
+            if (window.lucide) lucide.createIcons();
+        }
     }
 }
 
 function updateSeed(value) { state.seed = value ? parseInt(value) : null; }
-function updateSteps(value) { 
-    state.numSteps = parseInt(value); 
-    document.getElementById('steps-value').textContent = value; 
+function updateSteps(value) {
+    state.numSteps = parseInt(value);
+    document.getElementById('steps-value').textContent = value;
 }
 function randomSeed() {
     const seed = Math.floor(Math.random() * 1000000);
@@ -553,6 +599,195 @@ function randomSeed() {
     state.seed = seed;
     showToast(`Random seed: ${seed}`, 'info', 2000);
 }
+
+// ============================================================================
+// UI TOGGLES & VIEWS
+// ============================================================================
+
+window.switchView = function (view) {
+    state.activeView = view;
+    const createView = document.getElementById('tilt-wrapper');
+    const controlArea = document.querySelector('.w-full.max-w-md.mt-6'); // Unified Control Area
+    const communityView = document.getElementById('community-view');
+    const navCreate = document.getElementById('nav-create');
+    const navCommunity = document.getElementById('nav-community');
+
+    if (view === 'create') {
+        createView.classList.remove('hidden');
+        controlArea.classList.remove('hidden');
+        communityView.classList.add('hidden');
+        navCreate.className = 'px-4 py-1.5 rounded-full text-xs font-bold transition-all bg-white text-black';
+        navCommunity.className = 'px-4 py-1.5 rounded-full text-xs font-bold transition-all text-gray-400 hover:text-white';
+    } else {
+        createView.classList.add('hidden');
+        controlArea.classList.add('hidden');
+        communityView.classList.remove('hidden');
+        navCreate.className = 'px-4 py-1.5 rounded-full text-xs font-bold transition-all text-gray-400 hover:text-white';
+        navCommunity.className = 'px-4 py-1.5 rounded-full text-xs font-bold transition-all bg-white text-black';
+        renderCommunity();
+    }
+    if (window.lucide) lucide.createIcons();
+};
+
+window.toggleAuthModal = function () {
+    const modal = document.getElementById('auth-modal');
+    if (!modal) return;
+    modal.classList.toggle('hidden');
+
+    // If opening and user is logged in, show profile
+    if (!modal.classList.contains('hidden') && state.currentUser) {
+        document.getElementById('login-form').classList.add('hidden');
+        document.getElementById('signup-form').classList.add('hidden');
+        document.getElementById('profile-form').classList.remove('hidden');
+
+        // Populate profile
+        document.getElementById('profile-email').innerText = state.currentUser.email;
+        document.getElementById('profile-username').value = state.currentUser.user_metadata?.username || '';
+        document.getElementById('profile-avatar-url').value = state.currentUser.user_metadata?.avatar_url || '';
+        if (state.currentUser.user_metadata?.avatar_url) {
+            document.getElementById('profile-avatar').src = state.currentUser.user_metadata.avatar_url;
+        }
+    }
+};
+
+window.switchAuthMode = function (mode) {
+    const loginForm = document.getElementById('login-form');
+    const signupForm = document.getElementById('signup-form');
+    if (mode === 'signup') {
+        loginForm.classList.add('hidden');
+        signupForm.classList.remove('hidden');
+    } else {
+        loginForm.classList.remove('hidden');
+        signupForm.classList.add('hidden');
+    }
+};
+
+window.handleAuthSubmit = async function (type) {
+    try {
+        if (type === 'signup') {
+            const email = document.getElementById('reg-email').value;
+            const password = document.getElementById('reg-password').value;
+            const username = document.getElementById('reg-username').value;
+            await auth.signUpUser(email, password, username);
+            showToast('Check your email for confirmation!', 'info');
+        } else {
+            const email = document.getElementById('auth-email').value;
+            const password = document.getElementById('auth-password').value;
+            await auth.signInUser(email, password);
+            showToast('Welcome back!', 'success');
+        }
+        toggleAuthModal();
+    } catch (e) {
+        showToast(e.message, 'error');
+    }
+};
+
+function handleUserLogin(user) {
+    state.currentUser = user;
+    const userBtn = document.getElementById('user-btn');
+    if (userBtn) {
+        // Priority: Auth Metadata > Fallback Default
+        const avatarUrl = user.user_metadata?.avatar_url || `https://ui-avatars.com/api/?name=${user.user_metadata?.username || user.email}&background=random`;
+        userBtn.innerHTML = `<img src="${avatarUrl}" class="w-full h-full rounded-full object-cover">`;
+        userBtn.onclick = toggleAuthModal;
+        userBtn.title = `My Account (${user.email})`;
+    }
+    syncLocalToCloud();
+}
+
+function handleUserLogout() {
+    state.currentUser = null;
+    const userBtn = document.getElementById('user-btn');
+    if (userBtn) {
+        userBtn.innerHTML = '<i data-lucide="user" class="text-white"></i>';
+        userBtn.onclick = toggleAuthModal;
+        userBtn.title = "My Account";
+        if (window.lucide) lucide.createIcons();
+    }
+    showToast('Signed out', 'info');
+}
+
+window.handleLogOut = async function () {
+    if (confirm('Are you sure you want to sign out?')) {
+        await auth.signOutUser();
+        toggleAuthModal();
+    }
+};
+
+window.handleAvatarUpload = async function (event) {
+    const file = event.target.files[0];
+    if (!file || !state.currentUser) return;
+
+    try {
+        showToast('Uploading avatar...', 'info');
+        const publicUrl = await db.uploadAvatar(state.currentUser.id, file);
+        document.getElementById('profile-avatar-url').value = publicUrl;
+        document.getElementById('profile-avatar').src = publicUrl;
+        showToast('Avatar uploaded! Click Save to apply.', 'success');
+    } catch (e) {
+        console.error(e);
+        showToast('Upload failed: ' + e.message, 'error');
+    }
+};
+
+window.updateProfile = async function () {
+    if (!state.currentUser) return;
+
+    const username = document.getElementById('profile-username').value;
+    const avatarUrl = document.getElementById('profile-avatar-url').value;
+
+    try {
+        showToast('Saving changes...', 'info');
+        await db.updateProfile(state.currentUser.id, {
+            username: username,
+            avatar_url: avatarUrl,
+            updated_at: new Date().toISOString()
+        });
+
+        // Update local user state metadata (Supabase auth user metadata is separate from public.profiles table usually, 
+        // but for this app we'll assume they sync or we just refresh)
+        state.currentUser.user_metadata = { ...state.currentUser.user_metadata, username, avatar_url: avatarUrl };
+
+        handleUserLogin(state.currentUser); // Refresh UI
+        showToast('Profile updated!', 'success');
+    } catch (e) {
+        console.error(e);
+        showToast('Update failed: ' + e.message, 'error');
+    }
+};
+
+window.updateDeviceRatio = function (preset) {
+    const wInput = document.getElementById('width');
+    const hInput = document.getElementById('height');
+    const presets = {
+        iphone: { w: 1284, h: 2778 },
+        macbook: { w: 2560, h: 1600 },
+        desktop: { w: 1920, h: 1080 },
+        square: { w: 1024, h: 1024 },
+        ultrawide: { w: 3440, h: 1440 }
+    };
+    const choice = presets[preset] || presets.desktop;
+    wInput.value = choice.w;
+    hInput.value = choice.h;
+    showToast(`Ratio set for ${preset}`, 'info', 1000);
+};
+
+window.toggleBatchMode = function () {
+    state.batchMode = !state.batchMode;
+    const btn = document.getElementById('batch-toggle');
+    const select = document.getElementById('batch-count');
+    if (state.batchMode) {
+        btn.classList.add('bg-white', 'text-black');
+        btn.classList.remove('bg-white/5', 'text-white');
+        select.value = "4";
+        showToast('Batch mode: 4 variations', 'info');
+    } else {
+        btn.classList.remove('bg-white', 'text-black');
+        btn.classList.add('bg-white/5', 'text-white');
+        select.value = "1";
+        showToast('Standard mode: Single image', 'info');
+    }
+};
 
 // ============================================================================
 // HISTORY & FAVORITES
@@ -566,15 +801,15 @@ const historyObserver = new IntersectionObserver((entries) => {
     });
 }, { root: document.getElementById('history-drawer'), threshold: 0.1 });
 
-window.setHistoryFilter = function(filter) {
+window.setHistoryFilter = function (filter) {
     state.historyFilter = filter;
     const tabAll = document.getElementById('tab-all');
     const tabFav = document.getElementById('tab-favorites');
-    
+
     // Toggle logic
     const activeClass = "flex-1 py-2.5 text-sm font-bold rounded-lg bg-white text-black shadow-lg flex items-center justify-center gap-2";
     const inactiveClass = "flex-1 py-2.5 text-sm font-bold rounded-lg text-gray-400 hover:text-white flex items-center justify-center gap-2";
-    
+
     if (filter === 'all') {
         tabAll.className = activeClass; tabFav.className = inactiveClass;
     } else {
@@ -589,7 +824,7 @@ function toggleHistory() {
     if (drawer.classList.contains('translate-x-full')) {
         drawer.classList.remove('translate-x-full');
         overlay.classList.remove('hidden');
-        renderHistory(); 
+        renderHistory();
     } else {
         drawer.classList.add('translate-x-full');
         overlay.classList.add('hidden');
@@ -602,10 +837,11 @@ function saveToHistory(url, genreName, styleName, prompt, seed) {
     history.unshift(newItem);
     if (history.length > APP_CONFIG.MAX_HISTORY_ITEMS) history.pop();
     localStorage.setItem('wallpaper_history', JSON.stringify(history));
+    renderHistory();
 }
 
 function clearHistory() {
-    if(confirm('Clear history? Favorites will be kept.')) {
+    if (confirm('Clear history? Favorites will be kept.')) {
         localStorage.removeItem('wallpaper_history');
         renderHistory();
         showToast('History cleared', 'success');
@@ -616,69 +852,68 @@ function clearHistory() {
 
 function renderHistory() {
     let history = JSON.parse(localStorage.getItem('wallpaper_history') || '[]');
-    const list = document.getElementById('history-list');
-    
+    const mobileList = document.getElementById('history-list');
+    const desktopList = document.getElementById('desktop-history-list');
+
     historyObserver.disconnect();
-    list.innerHTML = '';
 
-    if (state.historyFilter === 'favorites') {
-        history = history.filter(item => state.favorites.includes(item.url));
-    }
+    const renderToList = (list, historyItems) => {
+        if (!list) return;
+        list.innerHTML = '';
 
-    if (history.length === 0) {
-        list.innerHTML = `
-            <div class="flex flex-col items-center justify-center h-64 text-gray-500 opacity-50 col-span-full">
-                <i data-lucide="image" class="w-12 h-12 mb-4 opacity-50"></i>
-                <p>No wallpapers found.</p>
-            </div>`;
-        if(window.lucide) lucide.createIcons();
-        return;
-    }
+        if (historyItems.length === 0) {
+            list.innerHTML = `
+                <div class="flex flex-col items-center justify-center p-12 text-gray-500 opacity-50 col-span-full">
+                    <i data-lucide="image" class="w-12 h-12 mb-4 opacity-50"></i>
+                    <p>No wallpapers found.</p>
+                </div>`;
+            return;
+        }
 
-    history.forEach((item) => {
-        const isFav = state.favorites.includes(item.url);
-        const card = document.createElement('div');
-        card.className = 'history-card reveal'; 
-        
-        card.innerHTML = `
-            <img src="${item.url}" class="history-card-img" loading="lazy" onclick="showResult('${item.url}', ${item.seed || 'null'})">
-            
-            <!-- Genre Label (Top Left) -->
-            <div class="overlay-info">
-                <span class="overlay-title">${item.genre}</span>
-            </div>
+        historyItems.forEach((item) => {
+            const isFav = state.favorites.includes(item.url);
+            const card = document.createElement('div');
+            card.className = 'history-card reveal';
 
-            <!-- Favorite (Top Right) -->
-            <button onclick="event.stopPropagation(); toggleFavorite('${item.url}')" class="history-fav-btn ${isFav ? 'active' : ''}">
-                <i data-lucide="star" class="w-4 h-4 ${isFav ? 'fill-current' : ''}"></i>
-            </button>
-
-            <!-- Bottom Actions -->
-            <div class="history-actions-overlay">
-                <div class="history-btn-group">
-                    <button onclick="event.stopPropagation(); remixImage('${item.timestamp}')" class="catalog-btn" title="Remix">
-                        <i data-lucide="shuffle"></i>
-                    </button>
-                    
-                    <button onclick="event.stopPropagation(); showResult('${item.url}', ${item.seed})" class="catalog-btn" title="View">
-                        <i data-lucide="eye"></i>
-                    </button>
-                    
-                    <button onclick="event.stopPropagation(); downloadImageDirect('${item.url}')" class="catalog-btn" title="Download">
-                        <i data-lucide="download"></i>
-                    </button>
-
-                    <button onclick="event.stopPropagation(); deleteHistoryItem('${item.timestamp}')" class="catalog-btn btn-delete" title="Delete">
-                        <i data-lucide="trash-2"></i>
-                    </button>
+            card.innerHTML = `
+                <img src="${item.url}" class="history-card-img" loading="lazy" onclick="showResult('${item.url}', ${item.seed || 'null'})">
+                <div class="overlay-info">
+                    <span class="overlay-title">${item.genre}</span>
                 </div>
-            </div>
-        `;
-        list.appendChild(card);
-        historyObserver.observe(card);
-    });
+                <button onclick="event.stopPropagation(); toggleFavorite('${item.url}')" class="history-fav-btn ${isFav ? 'active' : ''}">
+                    <i data-lucide="star" class="w-4 h-4 ${isFav ? 'fill-current' : ''}"></i>
+                </button>
+                <div class="history-actions-overlay">
+                    <div class="history-btn-group">
+                        <button onclick="event.stopPropagation(); remixImage('${item.timestamp}')" class="catalog-btn" title="Remix">
+                            <i data-lucide="shuffle"></i>
+                        </button>
+                        <button onclick="event.stopPropagation(); showResult('${item.url}', ${item.seed})" class="catalog-btn" title="View">
+                            <i data-lucide="eye"></i>
+                        </button>
+                        <button onclick="event.stopPropagation(); downloadImageDirect('${item.url}')" class="catalog-btn" title="Download">
+                            <i data-lucide="download"></i>
+                        </button>
+                        <button onclick="event.stopPropagation(); deleteHistoryItem('${item.timestamp}')" class="catalog-btn btn-delete" title="Delete">
+                            <i data-lucide="trash-2"></i>
+                        </button>
+                    </div>
+                </div>
+            `;
+            list.appendChild(card);
+            historyObserver.observe(card);
+        });
+    };
 
-    if(window.lucide) lucide.createIcons();
+    let filteredHistory = history;
+    if (state.historyFilter === 'favorites') {
+        filteredHistory = history.filter(item => state.favorites.includes(item.url));
+    }
+
+    renderToList(mobileList, filteredHistory);
+    renderToList(desktopList, filteredHistory);
+
+    if (window.lucide) lucide.createIcons();
 }
 function deleteHistoryItem(timestamp) {
     let history = JSON.parse(localStorage.getItem('wallpaper_history') || '[]');
@@ -706,21 +941,45 @@ function renderFavorites() {
 }
 
 // 2B: Remix
-window.remixImage = function(timestamp) {
-    const history = JSON.parse(localStorage.getItem('wallpaper_history') || '[]');
-    const item = history.find(i => i.timestamp === Number(timestamp) || i.url === timestamp);
+window.remixImage = async function (idOrTimestamp, fromCommunity = false) {
+    let item;
+
+    if (fromCommunity) {
+        try {
+            item = await db.fetchWallpaperById(idOrTimestamp);
+        } catch (e) {
+            console.error(e);
+            showToast("Failed to fetch remix data", "error");
+            return;
+        }
+    } else {
+        const history = JSON.parse(localStorage.getItem('wallpaper_history') || '[]');
+        item = history.find(i => i.timestamp === Number(idOrTimestamp) || i.url === idOrTimestamp || i.id === idOrTimestamp);
+    }
+
     if (!item) return;
 
     const genreIndex = GENRES.findIndex(g => g.name === item.genre);
     if (genreIndex !== -1) state.activeGenreIndex = genreIndex;
     const styleIndex = STYLES.findIndex(s => s.name === item.style);
     if (styleIndex !== -1) state.activeStyleIndex = styleIndex;
+
     if (item.seed) {
         state.seed = item.seed;
-        document.getElementById('seed-input').value = item.seed;
+        const seedInput = document.getElementById('seed-input');
+        if (seedInput) seedInput.value = item.seed;
     }
+
+    if (item.prompt) {
+        state.isPromptManuallyEdited = true;
+        const promptInput = document.getElementById('custom-prompt');
+        if (promptInput) promptInput.value = item.prompt;
+    }
+
     updateCarouselUI();
-    toggleHistory();
+    if (!fromCommunity) toggleHistory();
+    else switchView('create');
+
     showToast("Settings restored!", "success");
     window.scrollTo({ top: 0, behavior: 'smooth' });
 };
@@ -758,32 +1017,17 @@ function showResult(url, seed = null) {
 
     // Category C: Extract Colors when image is loaded
     // Need to handle CORS if loading from external URL
-    
+
     img.onload = () => extractColors(img);
 }
 
 // Category C: Color Extraction Logic
 function extractColors(imgElement) {
     try {
-        // Create canvas
-        const canvas = document.createElement('canvas');
-        const ctx = canvas.getContext('2d');
-        canvas.width = 100; // Small size for performance
-        canvas.height = 100;
-        ctx.drawImage(imgElement, 0, 0, 100, 100);
-        
-        // Sampling points: Center and Corners
-        const samplePoints = [
-            {x: 50, y: 50}, {x: 20, y: 20}, {x: 80, y: 20}, {x: 20, y: 80}, {x: 80, y: 80}
-        ];
-        
-        // Ensure container exists in HTML (User needs to add this div if not present)
-        // If not present, we can create it dynamically in the modal actions
         let paletteContainer = document.getElementById('color-palette-container');
-        if(!paletteContainer) {
-            // Create it inside the result modal if it doesn't exist
+        if (!paletteContainer) {
             const resultModalContent = document.querySelector('#result-modal .flex-col.gap-3');
-            if(resultModalContent) {
+            if (resultModalContent) {
                 paletteContainer = document.createElement('div');
                 paletteContainer.id = 'color-palette-container';
                 paletteContainer.className = 'flex justify-center gap-2 mt-2';
@@ -792,26 +1036,36 @@ function extractColors(imgElement) {
                 return;
             }
         }
-        
+
         paletteContainer.innerHTML = '';
 
-        samplePoints.forEach(p => {
-            const pixel = ctx.getImageData(p.x, p.y, 1, 1).data;
-            const hex = "#" + ((1 << 24) + (pixel[0] << 16) + (pixel[1] << 8) + pixel[2]).toString(16).slice(1).toUpperCase();
-            
-            const dot = document.createElement('div');
-            dot.className = "w-8 h-8 rounded-full cursor-pointer hover:scale-125 transition-transform border border-white/20 shadow-lg";
-            dot.style.backgroundColor = hex;
-            dot.title = `Copy ${hex}`;
-            dot.onclick = () => {
-                copyToClipboard(hex);
-                showToast(`Copied ${hex}`, 'info', 1000);
-            };
-            paletteContainer.appendChild(dot);
-        });
-        
+        if (window.ColorThief) {
+            const colorThief = new ColorThief();
+            const palette = colorThief.getPalette(imgElement, 5);
+
+            // Adaptive UI: Set modal background color to match the dominant color
+            const dom = palette[0];
+            const resultModal = document.getElementById('result-modal');
+            if (resultModal) {
+                resultModal.style.background = `radial-gradient(circle at center, rgba(${dom[0]}, ${dom[1]}, ${dom[2]}, 0.8), #000)`;
+            }
+
+            palette.forEach(rgb => {
+                const hex = "#" + ((1 << 24) + (rgb[0] << 16) + (rgb[1] << 8) + rgb[2]).toString(16).slice(1).toUpperCase();
+
+                const dot = document.createElement('div');
+                dot.className = "w-8 h-8 rounded-full cursor-pointer hover:scale-125 transition-transform border border-white/20 shadow-lg";
+                dot.style.backgroundColor = hex;
+                dot.title = `Copy ${hex}`;
+                dot.onclick = () => {
+                    copyToClipboard(hex);
+                    showToast(`Copied ${hex}`, 'info', 1000);
+                };
+                paletteContainer.appendChild(dot);
+            });
+        }
     } catch (e) {
-        console.warn("Cannot extract colors (CORS limitations likely)", e);
+        console.warn("Color extraction failed:", e);
     }
 }
 
@@ -826,7 +1080,18 @@ async function handleGenerate() {
     const genre = GENRES[state.activeGenreIndex];
     const style = STYLES[state.activeStyleIndex];
     const promptInput = document.getElementById('custom-prompt');
-    let finalPrompt = promptInput.value || `${genre.prompt}, ${style.prompt}. wallpaper.`;
+    const batchCount = parseInt(document.getElementById('batch-count')?.value || '1');
+
+    // Intelligent "Surprise Me"
+    let finalPrompt = promptInput?.value;
+    if (!finalPrompt) {
+        finalPrompt = `${genre.prompt}, ${style.prompt}. wallpaper.`;
+        if (typeof RANDOM_MODIFIERS !== 'undefined' && RANDOM_MODIFIERS.length > 0) {
+            const mod = RANDOM_MODIFIERS[Math.floor(Math.random() * RANDOM_MODIFIERS.length)];
+            finalPrompt += `, ${mod}`;
+        }
+    }
+
     const w = parseInt(document.getElementById('width').value);
     const h = parseInt(document.getElementById('height').value);
     const seed = state.seed || Math.floor(Math.random() * 1000000);
@@ -836,67 +1101,131 @@ async function handleGenerate() {
     const statusDiv = document.getElementById('generation-status');
     const resultImage = document.getElementById('generation-result-image');
     const actions = document.getElementById('generation-actions');
+    const progressBar = document.getElementById('generation-progress-bar');
+    const loadingText = document.getElementById('loading-text');
+
+    const updateProgress = (pct, text) => {
+        if (progressBar) progressBar.style.width = `${pct}%`;
+        if (loadingText) loadingText.innerText = text;
+    };
 
     document.getElementById('main-card').classList.add('generating-active');
     overlay.classList.remove('hidden');
     canvas.classList.remove('hidden');
     statusDiv.classList.remove('hidden');
     resultImage.classList.add('hidden');
+    resultImage.classList.remove('reveal-active');
     actions.classList.add('hidden');
 
     canvas.style.opacity = '1';
     statusDiv.style.opacity = '1';
-    document.getElementById('loading-text').innerText = `Creating ${state.isDesktopMode ? 'Desktop' : 'Mobile'} Wallpaper`;
 
+    updateProgress(30, "Step 1/3: Analyzing prompt and configuration...");
     initGenerationAnimation();
 
     try {
         const apiUrl = (API_CONFIG.BASE_URL.endsWith('/') ? API_CONFIG.BASE_URL.slice(0, -1) : API_CONFIG.BASE_URL) + API_CONFIG.GENERATION_ENDPOINT;
-        let data = null;
+        let finalData = null;
 
-        for (let i = 0; i < API_CONFIG.MAX_RETRIES; i++) {
-            try {
-                const response = await fetch(apiUrl, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ prompt: finalPrompt, width: w, height: h, num_steps: state.numSteps, seed: seed })
-                });
-                if (!response.ok) throw new Error(`HTTP ${response.status}`);
-                data = await response.json();
-                break;
-            } catch (e) {
-                if (i === API_CONFIG.MAX_RETRIES - 1) throw e;
-                await new Promise(r => setTimeout(r, API_CONFIG.RETRY_DELAY));
+        updateProgress(65, `Step 2/3: Generating ${batchCount > 1 ? batchCount + ' variations' : 'wallpaper'}...`);
+
+        // Batch Generation Logic
+        const generateSingle = async (currentSeed) => {
+            for (let i = 0; i < API_CONFIG.MAX_RETRIES; i++) {
+                try {
+                    const response = await fetch(apiUrl, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ prompt: finalPrompt, width: w, height: h, num_steps: state.numSteps, seed: currentSeed })
+                    });
+                    if (!response.ok) throw new Error(`HTTP ${response.status}`);
+                    return await response.json();
+                } catch (e) {
+                    if (i === API_CONFIG.MAX_RETRIES - 1) throw e;
+                    await new Promise(r => setTimeout(r, API_CONFIG.RETRY_DELAY));
+                }
             }
+        };
+
+        if (batchCount > 1) {
+            const promises = Array.from({ length: batchCount }, (_, i) => generateSingle(seed + i));
+            const results = await Promise.all(promises);
+            finalData = { output: results.map(r => r.output), isBatch: true };
+        } else {
+            const result = await generateSingle(seed);
+            finalData = { output: result.output, isBatch: false };
         }
 
-        if (data && data.output) {
-            stopGenerationAnimation();
-            triggerConfetti(); // Category B: Success Confetti
-            
-            canvas.style.opacity = '0';
-            statusDiv.style.opacity = '0';
+        if (finalData && finalData.output) {
+            updateProgress(90, "Step 3/3: Finalizing and preparing results...");
 
-            setTimeout(() => {
-                canvas.classList.add('hidden');
-                statusDiv.classList.add('hidden');
-                resultImage.src = data.output;
-                resultImage.classList.remove('hidden');
-                resultImage.style.opacity = '0';
-                
-                setTimeout(() => {
-                    resultImage.style.opacity = '1';
+            setTimeout(async () => {
+                updateProgress(100, "Success");
+                stopGenerationAnimation();
+                triggerConfetti();
+
+                canvas.style.opacity = '0';
+                statusDiv.style.opacity = '0';
+
+                setTimeout(async () => {
+                    canvas.classList.add('hidden');
+                    statusDiv.classList.add('hidden');
+
+                    if (finalData.isBatch) {
+                        // Display Batch Grid
+                        resultImage.classList.add('hidden');
+                        const grid = document.createElement('div');
+                        grid.id = 'batch-grid-result';
+                        grid.className = 'batch-grid reveal-active';
+                        finalData.output.forEach(url => {
+                            const img = document.createElement('img');
+                            img.src = url;
+                            img.className = 'batch-grid-item';
+                            img.onclick = () => showResult(url, seed, true);
+                            grid.appendChild(img);
+                        });
+                        resultImage.parentNode.insertBefore(grid, resultImage);
+                        window.currentGeneratedImage = finalData.output[0]; // Use first for main actions
+                    } else {
+                        // Display Single Image
+                        const oldGrid = document.getElementById('batch-grid-result');
+                        if (oldGrid) oldGrid.remove();
+                        resultImage.src = finalData.output;
+                        resultImage.classList.remove('hidden');
+                        resultImage.classList.add('reveal-active');
+                        window.currentGeneratedImage = finalData.output;
+                    }
+
                     actions.classList.remove('hidden');
-                    if(window.lucide) lucide.createIcons();
-                }, 50);
-            }, 500);
+                    if (window.lucide) lucide.createIcons();
+                    setTimeout(() => { if (progressBar) progressBar.style.width = '0%'; }, 500);
+                }, 500);
 
-            window.currentGeneratedImage = data.output;
-            window.currentGeneratedSeed = seed;
-            saveToHistory(data.output, genre.name, style.name, finalPrompt, seed);
-            showToast('Wallpaper created successfully!', 'success');
-        } else {
-            throw new Error('No output data received');
+                window.currentGeneratedSeed = seed;
+
+                // SAVE TO SUPABASE IF LOGGED IN
+                if (state.currentUser) {
+                    const outputs = Array.isArray(finalData.output) ? finalData.output : [finalData.output];
+                    for (const url of outputs) {
+                        try {
+                            await db.saveWallpaperToDB({
+                                user_id: state.currentUser.id,
+                                url: url,
+                                prompt: finalPrompt,
+                                genre: genre.name,
+                                style: style.name,
+                                seed: seed,
+                                is_public: false
+                            });
+                        } catch (e) {
+                            console.error('Failed to save to cloud:', e);
+                        }
+                    }
+                }
+
+                saveToHistory(Array.isArray(finalData.output) ? finalData.output[0] : finalData.output, genre.name, style.name, finalPrompt, seed);
+                showToast(batchCount > 1 ? `Generated ${batchCount} variations!` : 'Wallpaper created!', 'success');
+            }, 500);
         }
     } catch (error) {
         console.error(error);
@@ -918,7 +1247,10 @@ function initWebGL() {
     const canvas = document.getElementById('webgl-canvas');
     if (!canvas) return;
     if (!window.WebGLRenderingContext) { enableFallbackMode(); return; }
-    
+
+    // Check for prefers-reduced-motion
+    const prefersReducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
     try {
         const scene = new THREE.Scene();
         const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
@@ -931,13 +1263,22 @@ function initWebGL() {
         const positions = new Float32Array(particleCount * 3);
         for (let i = 0; i < particleCount * 3; i++) positions[i] = (Math.random() - 0.5) * 20;
         geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
-        
+
         particleMaterial = new THREE.PointsMaterial({ color: 0x444444, size: 0.05, transparent: true, opacity: 0.6 });
         const particles = new THREE.Points(geometry, particleMaterial);
         scene.add(particles);
 
         function animate() {
             requestAnimationFrame(animate);
+            // Smart Throttling
+            const overlay = document.getElementById('generation-overlay');
+            const drawer = document.getElementById('history-drawer');
+            if ((overlay && !overlay.classList.contains('hidden')) ||
+                (drawer && drawer.classList.contains('translate-x-0')) ||
+                prefersReducedMotion) {
+                return;
+            }
+
             if (particleMaterial) particleMaterial.color.lerp(targetColor, 0.05); // Color tween
             particles.rotation.y += 0.0005;
             particles.position.y += Math.sin(Date.now() * 0.001) * 0.002;
@@ -979,11 +1320,11 @@ function initGenerationAnimation() {
     const positions = new Float32Array(pixelCount * 3);
     for (let i = 0; i < pixelCount * 3; i++) positions[i] = (Math.random() - 0.5) * 20;
     pixelGeometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
-    
+
     const pixelMaterial = new THREE.PointsMaterial({ size: 0.12, color: 0xffffff, transparent: true, opacity: 0.95, blending: THREE.AdditiveBlending });
     const pixelSystem = new THREE.Points(pixelGeometry, pixelMaterial);
     generationScene.add(pixelSystem);
-    
+
     let startTime = Date.now();
     function animate() {
         generationAnimationId = requestAnimationFrame(animate);
@@ -1074,9 +1415,448 @@ window.shareImage = shareImage;
 window.closeGenerationDisplay = closeGenerationDisplay;
 window.viewFullResult = viewFullResult;
 window.downloadGenerated = downloadGenerated;
-window.remixImage = remixImage; 
+window.remixImage = remixImage;
 window.downloadFromModal = async function () {
     const url = document.getElementById('result-image').src;
     if (url) await downloadImageDirect(url);
 
 };
+// ============================================================================
+// CLOUD SYNC & COMMUNITY
+// ============================================================================
+
+const COMMUNITY_PAGE_SIZE = 24;
+
+async function renderCommunity(filterType = 'all', searchQuery = '', isAppend = false, creatorId = null) {
+    const grid = document.getElementById('community-grid');
+    const loader = document.getElementById('community-loader');
+    if (!grid) return;
+
+    if (!isAppend) {
+        state.communityPage = 0;
+        state.hasMoreCommunity = true;
+        grid.innerHTML = '<div class="col-span-full py-20 flex justify-center"><div class="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-white"></div></div>';
+    }
+
+    if (state.isLoadingCommunity || !state.hasMoreCommunity) return;
+    state.isLoadingCommunity = true;
+    if (loader) loader.classList.remove('hidden');
+
+    try {
+        const currentUserId = state.currentUser ? state.currentUser.id : null;
+        const offset = state.communityPage * COMMUNITY_PAGE_SIZE;
+        let wallpapers;
+        if (creatorId) {
+            wallpapers = await db.fetchUserWallpapers(creatorId);
+        } else {
+            wallpapers = await db.fetchCommunityWallpapers(currentUserId, offset, COMMUNITY_PAGE_SIZE);
+        }
+
+        if (wallpapers.length < COMMUNITY_PAGE_SIZE || creatorId) {
+            state.hasMoreCommunity = false;
+        }
+
+        // Filtering
+        if (searchQuery) {
+            const q = searchQuery.toLowerCase();
+            wallpapers = wallpapers.filter(w =>
+                (w.prompt && w.prompt.toLowerCase().includes(q)) ||
+                (w.genre && w.genre.toLowerCase().includes(q)) ||
+                (w.style && w.style.toLowerCase().includes(q))
+            );
+        }
+
+        if (filterType === 'top') {
+            wallpapers.sort((a, b) => (b.likes_count || 0) - (a.likes_count || 0));
+        }
+
+        if (!isAppend) grid.innerHTML = '';
+
+        if (!wallpapers || wallpapers.length === 0) {
+            grid.innerHTML = '<div class="col-span-full py-20 text-center text-gray-500">No wallpapers found matching your criteria.</div>';
+            return;
+        }
+
+        wallpapers.forEach(item => {
+            const card = document.createElement('div');
+            card.className = 'history-card reveal h-[400px] cursor-pointer group shadow-2xl';
+            card.innerHTML = `
+                <img src="${item.url}" class="history-card-img" loading="lazy" onclick="showResult('${item.url}', ${item.seed})">
+                <div class="overlay-info p-6 flex flex-col justify-end">
+                    <span class="overlay-title text-xl font-bold">${item.genre}</span>
+                    <span class="text-xs text-gray-400 opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer hover:text-white" onclick="event.stopPropagation(); filterByCreator('${item.user_id}', '${item.author_name}')">by ${item.author_name || 'Anonymous'}</span>
+                </div>
+                
+                <!-- Like Button -->
+                <button onclick="event.stopPropagation(); handleToggleLike('${item.id}')" 
+                    id="like-btn-${item.id}"
+                    class="absolute top-4 right-4 z-20 p-2.5 rounded-full backdrop-blur-md transition-all duration-300 ${item.is_liked ? 'bg-red-500 text-white scale-110' : 'bg-black/30 text-white hover:bg-white/20'}"
+                    title="${item.is_liked ? 'Unlike' : 'Like'}">
+                    <div class="flex items-center gap-1.5">
+                        <i data-lucide="heart" class="w-5 h-5 ${item.is_liked ? 'fill-current' : ''}"></i>
+                        <span class="text-xs font-bold">${item.likes_count || 0}</span>
+                    </div>
+                </button>
+
+                <div class="history-actions-overlay flex items-center justify-center gap-3 opacity-0 group-hover:opacity-100 transition-opacity">
+                    <button onclick="remixImage('${item.id}', true)" class="bg-white text-black p-3 rounded-full hover:scale-110 transition" title="Remix This">
+                        <i data-lucide="shuffle" class="w-6 h-6"></i>
+                    </button>
+                    <button onclick="showResult('${item.url}', ${item.seed})" class="bg-white/10 text-white p-3 rounded-full hover:bg-white/20 transition" title="View Full Screen">
+                        <i data-lucide="maximize-2" class="w-6 h-6"></i>
+                    </button>
+                </div>
+            `;
+            grid.appendChild(card);
+        });
+        state.communityPage++;
+        if (window.lucide) lucide.createIcons();
+    } catch (e) {
+        console.error(e);
+        showToast('Failed to load community feed', 'error');
+    } finally {
+        state.isLoadingCommunity = false;
+        if (loader) loader.classList.add('hidden');
+    }
+}
+
+window.handleToggleLike = async function (wallpaperId) {
+    if (!state.currentUser) {
+        showToast('Sign in to like wallpapers!', 'info');
+        toggleAuthModal();
+        return;
+    }
+
+    const btn = document.getElementById(`like-btn-${wallpaperId}`);
+    if (!btn) return;
+
+    const heartIcon = btn.querySelector('i');
+    const countSpan = btn.querySelector('span');
+    let currentCount = parseInt(countSpan.innerText);
+
+    try {
+        // Optimistic UI update
+        const isLiking = !btn.classList.contains('bg-red-500');
+        if (isLiking) {
+            btn.classList.remove('bg-black/30', 'hover:bg-white/20');
+            btn.classList.add('bg-red-500', 'scale-110');
+            heartIcon.classList.add('fill-current');
+            countSpan.innerText = currentCount + 1;
+        } else {
+            btn.classList.remove('bg-red-500', 'scale-110');
+            btn.classList.add('bg-black/30', 'hover:bg-white/20');
+            heartIcon.classList.remove('fill-current');
+            countSpan.innerText = Math.max(0, currentCount - 1);
+        }
+
+        await db.toggleLike(wallpaperId, state.currentUser.id);
+        if (window.lucide) lucide.createIcons();
+    } catch (e) {
+        console.error(e);
+        showToast('Action failed', 'error');
+        renderCommunity(state.activeCommunityFilter || 'all');
+    }
+};
+
+window.filterByCreator = function (userId, username) {
+    state.activeCommunityFilter = 'creator';
+    showToast(`Viewing wallpapers by ${username}`, 'info');
+    renderCommunity('all', '', false, userId);
+};
+
+// Infinite Scroll Observer
+const communityObserver = new IntersectionObserver((entries) => {
+    if (entries[0].isIntersecting && state.activeView === 'community' && !state.isLoadingCommunity && state.hasMoreCommunity) {
+        renderCommunity(state.activeCommunityFilter, document.getElementById('community-search')?.value || '', true);
+    }
+}, { threshold: 0.1 });
+
+// Initialize Observer on Sentinel
+setTimeout(() => {
+    const sentinel = document.getElementById('community-sentinel');
+    if (sentinel) communityObserver.observe(sentinel);
+}, 2000);
+
+async function syncLocalToCloud() {
+    if (!state.currentUser) return;
+
+    const localHistory = JSON.parse(localStorage.getItem('wallpaper_history') || '[]');
+    if (localHistory.length === 0) return;
+
+    // Filter out items already synced in this session to avoid spamming
+    const toSync = localHistory.filter(item => !item.synced);
+    if (toSync.length === 0) return;
+
+    showToast('Syncing local history to cloud...', 'info', 2000);
+
+    let syncCount = 0;
+    for (const item of toSync) {
+        try {
+            // We'll rely on saveWallpaperToDB or a check here
+            // For now, simple check by URL
+            const { data } = await supabase.from('wallpapers').select('id').eq('url', item.url).maybeSingle();
+
+            if (!data) {
+                await db.saveWallpaperToDB({
+                    user_id: state.currentUser.id,
+                    url: item.url,
+                    prompt: item.prompt || 'Restored from local history',
+                    genre: item.genre,
+                    style: item.style,
+                    seed: item.seed,
+                    is_public: false
+                });
+                syncCount++;
+            }
+            item.synced = true;
+        } catch (e) {
+            console.error('Failed to sync item:', e);
+        }
+    }
+
+    if (syncCount > 0) {
+        localStorage.setItem('wallpaper_history', JSON.stringify(localHistory));
+        showToast(`Synced ${syncCount} new items!`, 'success');
+    }
+}
+
+// ============================================================================
+// SETTINGS & UTILITIES
+// ============================================================================
+
+window.toggleSettingsModal = function () {
+    const modal = document.getElementById('settings-modal');
+    modal.classList.toggle('hidden');
+
+    // Sync current state to inputs
+    if (!modal.classList.contains('hidden')) {
+        document.getElementById('steps-range').value = state.numSteps || 4;
+        document.getElementById('steps-val').innerText = state.numSteps || 4;
+        document.getElementById('seed-input-advanced').value = state.seed || '';
+    }
+};
+
+window.saveSettings = function () {
+    state.numSteps = parseInt(document.getElementById('steps-range').value);
+    const seedVal = document.getElementById('seed-input-advanced').value;
+    state.seed = seedVal ? parseInt(seedVal) : null;
+
+    savePreferences();
+    showToast('Settings saved!', 'success');
+    toggleSettingsModal();
+};
+
+window.clearLocalHistory = function () {
+    if (confirm('Are you sure you want to clear your local history and favorites? This will NOT affect cloud-synced items.')) {
+        localStorage.removeItem('wallpaper_history');
+        localStorage.removeItem('wallpaper_favorites');
+        renderHistory();
+        renderFavorites();
+        showToast('Local history cleared', 'info');
+        toggleSettingsModal();
+    }
+};
+
+// ============================================================================
+// COMMUNITY SEARCH & FILTER
+// ============================================================================
+
+window.filterCommunity = function (type) {
+    // Update UI active state
+    document.querySelectorAll('.community-controls button, #community-view button').forEach(b => {
+        b.classList.remove('active-filter', 'bg-white/10', 'border-white/20');
+        b.classList.add('bg-white/5', 'border-white/10');
+    });
+
+    const btn = document.getElementById(`filter-${type}`);
+    if (btn) {
+        btn.classList.add('active-filter', 'bg-white/10', 'border-white/20');
+        btn.classList.remove('bg-white/5', 'border-white/10');
+    }
+
+    // Render with filter
+    renderCommunity(type);
+};
+
+// Add listener for community search
+document.addEventListener('DOMContentLoaded', () => {
+    document.getElementById('community-search')?.addEventListener('input', debounce((e) => {
+        renderCommunity('all', e.target.value);
+    }, 500));
+});
+
+function debounce(func, wait) {
+    let timeout;
+    return (...args) => {
+        clearTimeout(timeout);
+        timeout = setTimeout(() => func.apply(this, args), wait);
+    };
+}
+
+window.togglePublic = async function () {
+    if (!state.currentUser) {
+        showToast('Please sign in to share wallpapers', 'warning');
+        toggleAuthModal();
+        return;
+    }
+
+    if (!window.currentGeneratedImage) return;
+
+    try {
+        // Find existing record or save new one as public
+        const { data: existing, error: fetchError } = await supabaseClient
+            .from('wallpapers')
+            .select('id, is_public')
+            .eq('url', window.currentGeneratedImage)
+            .maybeSingle();
+
+        if (fetchError) throw fetchError;
+
+        let isPublic = true;
+
+        if (existing) {
+            isPublic = !existing.is_public;
+            await db.togglePublicStatus(existing.id, isPublic);
+        } else {
+            showToast('Saving to cloud first...', 'info');
+            // This case shouldn't happen often as we save on generate, 
+            // but for older/unsynced local ones:
+            const wallpaper = await db.saveWallpaperToDB({
+                user_id: state.currentUser.id,
+                url: window.currentGeneratedImage,
+                prompt: document.getElementById('custom-prompt').value || 'Remixed Wallpaper',
+                is_public: true
+            });
+            isPublic = true;
+        }
+
+        const btn = document.getElementById('public-toggle-btn');
+        if (isPublic) {
+            btn.classList.add('bg-green-500', 'text-black', 'border-transparent');
+            btn.classList.remove('bg-white/10', 'text-white', 'border-white/10');
+            btn.querySelector('span').textContent = 'Public';
+            showToast('Wallpaper is now public!', 'success');
+        } else {
+            btn.classList.remove('bg-green-500', 'text-black', 'border-transparent');
+            btn.classList.add('bg-white/10', 'text-white', 'border-white/10');
+            btn.querySelector('span').textContent = 'Make Public';
+            showToast('Wallpaper is now private', 'info');
+        }
+    } catch (e) {
+        console.error(e);
+        showToast('Failed to update status', 'error');
+    }
+};
+
+window.remixImage = function (id, fromCommunity = false) {
+    showToast('Remixing style settings...', 'info');
+    document.getElementById('community-view').classList.add('hidden');
+    switchView('create');
+
+    // In a full implementation, we'd fetch the wallpaper by ID and 
+    // set the prompt/genre/style state. For now, we randomize the existing.
+    randomize();
+};
+
+window.remixCurrent = function () {
+    document.getElementById('result-modal').classList.add('hidden');
+    randomize();
+};
+
+window.updateProfile = async function () {
+    const username = document.getElementById('profile-username').value;
+    const avatarUrl = document.getElementById('profile-avatar-url').value;
+    if (!username) return;
+
+    try {
+        // 1. Update Database Profile Table
+        const { error } = await supabaseClient
+            .from('profiles')
+            .update({
+                username: username,
+                avatar_url: avatarUrl
+            })
+            .eq('id', state.currentUser.id);
+
+        if (error) throw error;
+
+        // 2. Sync with Auth Metadata (Crucial for persistence across refreshes)
+        await auth.updateUserMetadata({
+            username: username,
+            avatar_url: avatarUrl
+        });
+
+        showToast('Profile updated!', 'success');
+
+        // Update local UI
+        const userBtn = document.getElementById('user-btn');
+        if (userBtn) {
+            const finalAvatar = avatarUrl || `https://ui-avatars.com/api/?name=${username}&background=random`;
+            userBtn.innerHTML = `<img src="${finalAvatar}" class="w-full h-full rounded-full">`;
+        }
+
+        const profileImg = document.getElementById('profile-avatar');
+        if (profileImg) {
+            profileImg.src = avatarUrl || `https://ui-avatars.com/api/?name=${username}&background=random`;
+        }
+    } catch (e) {
+        console.error(e);
+        showToast('Failed to update profile', 'error');
+    }
+};
+
+// Update handleUserLogin to populate profile form
+const originalHandleUserLogin = window.handleUserLogin;
+window.handleUserLogin = async function (user) {
+    if (originalHandleUserLogin) originalHandleUserLogin(user);
+
+    // Populate Profile Form
+    const emailEl = document.getElementById('profile-email');
+    if (emailEl) emailEl.textContent = user.email;
+
+    // Fetch profile data
+    const { data } = await supabaseClient
+        .from('profiles')
+        .select('username, avatar_url')
+        .eq('id', user.id)
+        .maybeSingle();
+
+    if (data) {
+        const usernameEl = document.getElementById('profile-username');
+        if (usernameEl) usernameEl.value = data.username || '';
+
+        const avatarUrlEl = document.getElementById('profile-avatar-url');
+        if (avatarUrlEl) avatarUrlEl.value = data.avatar_url || '';
+
+        const avatarEl = document.getElementById('profile-avatar');
+        if (avatarEl) {
+            avatarEl.src = data.avatar_url || `https://ui-avatars.com/api/?name=${data.username || user.email}&background=random`;
+        }
+    }
+
+    // Switch to profile view in modal if it's open
+    const loginForm = document.getElementById('login-form');
+    const signupForm = document.getElementById('signup-form');
+    const profileForm = document.getElementById('profile-form');
+
+    if (profileForm && !document.getElementById('auth-modal').classList.contains('hidden')) {
+        if (loginForm) loginForm.classList.add('hidden');
+        if (signupForm) signupForm.classList.add('hidden');
+        profileForm.classList.remove('hidden');
+    }
+
+    // Override the user button click to show profile instead of just logout
+    const userBtn = document.getElementById('user-btn');
+    if (userBtn) {
+        userBtn.onclick = () => {
+            toggleAuthModal();
+            if (loginForm) loginForm.classList.add('hidden');
+            if (signupForm) signupForm.classList.add('hidden');
+            if (profileForm) profileForm.classList.remove('hidden');
+        };
+    }
+};
+
+// Global Export
+window.renderCommunity = renderCommunity;
+window.syncLocalToCloud = syncLocalToCloud;
