@@ -614,17 +614,30 @@ window.switchView = function (view) {
     const navCommunity = document.getElementById('nav-community');
 
     if (view === 'create') {
-        createView.classList.remove('hidden');
-        controlArea.classList.remove('hidden');
-        communityView.classList.add('hidden');
-        navCreate.className = 'px-4 py-1.5 rounded-full text-xs font-bold transition-all bg-white text-black';
-        navCommunity.className = 'px-4 py-1.5 rounded-full text-xs font-bold transition-all text-gray-400 hover:text-white';
+        createView?.classList.remove('hidden');
+        controlArea?.classList.remove('hidden');
+        communityView?.classList.add('hidden');
+
+        // Desktop Nav
+        if (navCreate) navCreate.className = 'px-4 py-1.5 rounded-full text-xs font-bold transition-all bg-white text-black';
+        if (navCommunity) navCommunity.className = 'px-4 py-1.5 rounded-full text-xs font-bold transition-all text-gray-400 hover:text-white';
+
+        // Mobile Nav
+        document.getElementById('mobile-nav-create')?.classList.replace('text-gray-400', 'text-white');
+        document.getElementById('mobile-nav-community')?.classList.replace('text-white', 'text-gray-400');
     } else {
-        createView.classList.add('hidden');
-        controlArea.classList.add('hidden');
-        communityView.classList.remove('hidden');
-        navCreate.className = 'px-4 py-1.5 rounded-full text-xs font-bold transition-all text-gray-400 hover:text-white';
-        navCommunity.className = 'px-4 py-1.5 rounded-full text-xs font-bold transition-all bg-white text-black';
+        createView?.classList.add('hidden');
+        controlArea?.classList.add('hidden');
+        communityView?.classList.remove('hidden');
+
+        // Desktop Nav
+        if (navCreate) navCreate.className = 'px-4 py-1.5 rounded-full text-xs font-bold transition-all text-gray-400 hover:text-white';
+        if (navCommunity) navCommunity.className = 'px-4 py-1.5 rounded-full text-xs font-bold transition-all bg-white text-black';
+
+        // Mobile Nav
+        document.getElementById('mobile-nav-community')?.classList.replace('text-gray-400', 'text-white');
+        document.getElementById('mobile-nav-create')?.classList.replace('text-white', 'text-gray-400');
+
         renderCommunity();
     }
     if (window.lucide) lucide.createIcons();
@@ -634,6 +647,14 @@ window.toggleAuthModal = function () {
     const modal = document.getElementById('auth-modal');
     if (!modal) return;
     modal.classList.toggle('hidden');
+
+    // Mobile Nav sync
+    const mobileNav = document.getElementById('mobile-nav');
+    if (!modal.classList.contains('hidden')) {
+        mobileNav?.classList.add('translate-y-full');
+    } else {
+        mobileNav?.classList.remove('translate-y-full');
+    }
 
     // If opening and user is logged in, show profile
     if (!modal.classList.contains('hidden') && state.currentUser) {
@@ -837,10 +858,13 @@ function toggleHistory() {
     if (drawer.classList.contains('translate-x-full')) {
         drawer.classList.remove('translate-x-full');
         overlay.classList.remove('hidden');
-        renderHistory();
+        document.body.style.overflow = 'hidden';
+        document.getElementById('mobile-nav')?.classList.add('translate-y-full');
     } else {
         drawer.classList.add('translate-x-full');
         overlay.classList.add('hidden');
+        document.body.style.overflow = '';
+        document.getElementById('mobile-nav')?.classList.remove('translate-y-full');
     }
 }
 
@@ -906,6 +930,9 @@ function renderHistory() {
                         </button>
                         <button onclick="event.stopPropagation(); downloadImageDirect('${item.url}')" class="catalog-btn" title="Download">
                             <i data-lucide="download"></i>
+                        </button>
+                        <button onclick="event.stopPropagation(); publishHistoryItem('${item.timestamp}')" class="catalog-btn" title="Post to Community">
+                            <i data-lucide="upload-cloud"></i>
                         </button>
                         <button onclick="event.stopPropagation(); deleteHistoryItem('${item.timestamp}')" class="catalog-btn btn-delete" title="Delete">
                             <i data-lucide="trash-2"></i>
@@ -1013,7 +1040,7 @@ function updateTime() {
     setTimeout(updateTime, 1000);
 }
 
-function showResult(url, seed = null) {
+function showResult(url, seed = null, wallpaperId = null) {
     const modal = document.getElementById('result-modal');
     const img = document.getElementById('result-image');
     const link = document.getElementById('download-link');
@@ -1025,8 +1052,13 @@ function showResult(url, seed = null) {
         seedDisplay.textContent = `Seed: ${seed}`;
         seedDisplay.classList.remove('hidden');
     }
+
+    if (wallpaperId) {
+        db.incrementViews(wallpaperId);
+    }
     document.getElementById('lock-screen-overlay').classList.add('hidden');
     modal.classList.remove('hidden');
+    document.getElementById('mobile-nav')?.classList.add('translate-y-full');
 
     // Category C: Extract Colors when image is loaded
     // Need to handle CORS if loading from external URL
@@ -1084,6 +1116,7 @@ function extractColors(imgElement) {
 
 function closeResult() {
     document.getElementById('result-modal').classList.add('hidden');
+    document.getElementById('mobile-nav')?.classList.remove('translate-y-full');
 }
 
 // ============================================================================
@@ -1275,8 +1308,9 @@ async function handleGenerate() {
 }
 
 async function handleBatchGenerate() {
-    const count = parseInt(document.getElementById('batch-count').value) || 4;
-    showToast(`Generating ${count} variations...`, 'info', 3000);
+    const count = parseInt(document.getElementById('batch-count')?.value) || 4;
+    // Just a UI trigger, actual logic is in handleGenerate
+    showToast(`Generating ${count} variations...`, 'info', 2000);
 }
 
 // ============================================================================
@@ -1501,11 +1535,9 @@ async function renderCommunity(filterType = 'all', searchQuery = '', isAppend = 
     if (!isAppend) {
         state.communityPage = 0;
         state.hasMoreCommunity = true;
-
-        // Implementation of Phase 10: Skeleton Screens
         grid.innerHTML = '';
         for (let i = 0; i < 8; i++) {
-            grid.innerHTML += `<div class="skeleton-card skeleton"></div>`;
+            grid.innerHTML += `<div class="skeleton-card skeleton aspect-[4/5] rounded-xl"></div>`; // Adjusted for mobile feed
         }
         window.scrollTo({ top: 0, behavior: 'smooth' });
     }
@@ -1519,20 +1551,25 @@ async function renderCommunity(filterType = 'all', searchQuery = '', isAppend = 
         const offset = state.communityPage * COMMUNITY_PAGE_SIZE;
         let wallpapers;
 
+        // Map filter to backend sort
+        // 'top' in UI -> 'trending' for backend (Views + Likes logic or just Views for now)
+        let sort = 'new';
+        if (filterType === 'top') sort = 'trending';
+
         if (creatorId) {
             wallpapers = await db.fetchUserWallpapers(creatorId);
             state.hasMoreCommunity = false;
         } else if (state.communitySource === 'following') {
             wallpapers = await db.fetchFollowingWallpapers(currentUserId, offset, COMMUNITY_PAGE_SIZE);
         } else {
-            wallpapers = await db.fetchCommunityWallpapers(currentUserId, offset, COMMUNITY_PAGE_SIZE);
+            wallpapers = await db.fetchCommunityWallpapers(currentUserId, offset, COMMUNITY_PAGE_SIZE, sort);
         }
 
         if (wallpapers.length < COMMUNITY_PAGE_SIZE || creatorId) {
             state.hasMoreCommunity = false;
         }
 
-        // Filtering
+        // Client-side filtering if needed (mostly for search)
         if (searchQuery) {
             const q = searchQuery.toLowerCase();
             wallpapers = wallpapers.filter(w =>
@@ -1542,55 +1579,73 @@ async function renderCommunity(filterType = 'all', searchQuery = '', isAppend = 
             );
         }
 
-        if (filterType === 'top') {
-            wallpapers.sort((a, b) => (b.likes_count || 0) - (a.likes_count || 0));
-        }
-
         if (!isAppend) grid.innerHTML = '';
 
         if (!wallpapers || wallpapers.length === 0) {
-            grid.innerHTML = '<div class="col-span-full py-20 text-center text-gray-500">No wallpapers found matching your criteria.</div>';
+            if (!isAppend) grid.innerHTML = '<div class="col-span-full py-20 text-center text-gray-500">No wallpapers found.</div>';
             return;
         }
 
-        wallpapers.forEach(item => {
+        wallpapers.forEach((wp, index) => {
             const card = document.createElement('div');
-            card.className = 'history-card reveal h-[400px] cursor-pointer group shadow-2xl';
+            // Unified Card Design (Responsive via CSS)
+            // Mobile: Full width, Instagram style. Desktop: Compact grid.
+            card.className = 'history-card reveal cursor-pointer group shadow-2xl bg-black/20 overflow-hidden';
+
+            // Format numbers
+            const formatCount = (n) => n >= 1000 ? (n / 1000).toFixed(1) + 'k' : (n || 0);
+
             card.innerHTML = `
-                <img src="${item.url}" class="history-card-img" loading="lazy" onclick="showResult('${item.url}', ${item.seed})">
-                <div class="overlay-info p-6 flex flex-col justify-end">
-                    <span class="overlay-title text-xl font-bold">${item.genre}</span>
-                    <div class="flex items-center gap-2 group/author">
-                        <span class="text-xs text-gray-400 opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer hover:text-white" 
-                            onclick="event.stopPropagation(); filterByCreator('${item.user_id}', '${item.author_name}')">
-                            by ${item.author_name || 'Anonymous'}
-                        </span>
-                        ${(item.user_id && state.currentUser && item.user_id !== state.currentUser.id) ? `
-                        <button onclick="event.stopPropagation(); handleToggleFollow('${item.user_id}', '${item.author_name}')"
-                            class="bg-white/10 px-2 py-0.5 rounded text-[10px] text-white opacity-0 group-hover/author:opacity-100 transition-opacity hover:bg-white hover:text-black">
+                <img src="${wp.url}" class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" loading="lazy" onclick="showResult('${wp.url}', ${wp.seed}, '${wp.id}')">
+                
+                <!-- Overlay Gradient -->
+                <div class="absolute inset-0 bg-gradient-to-t from-black/90 via-transparent to-transparent opacity-60 sm:opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none"></div>
+
+                <!-- Author Header (Mobile Visible, Desktop on Hover) -->
+                <div class="absolute top-0 left-0 right-0 p-3 flex items-center justify-between opacity-100 sm:opacity-0 group-hover:opacity-100 transition-opacity duration-300 z-10 bg-gradient-to-b from-black/60 to-transparent sm:bg-none">
+                    <div class="flex items-center gap-2 cursor-pointer" onclick="event.stopPropagation(); filterByCreator('${wp.user_id}', '${wp.author_name}')">
+                        <div class="w-8 h-8 rounded-full border border-white/20 overflow-hidden bg-white/10">
+                            <img src="${wp.author_avatar || `https://ui-avatars.com/api/?name=${wp.author_name}&background=random`}" class="w-full h-full object-cover">
+                        </div>
+                        <span class="text-xs font-bold text-white shadow-black drop-shadow-md">@${wp.author_name}</span>
+                    </div>
+                     ${(wp.user_id && state.currentUser && wp.user_id !== state.currentUser.id) ? `
+                        <button onclick="event.stopPropagation(); handleToggleFollow('${wp.user_id}', '${wp.author_name}')"
+                            class="bg-white/20 backdrop-blur-sm px-3 py-1 rounded-full text-[10px] font-bold text-white hover:bg-white hover:text-black transition">
                             Follow
                         </button>` : ''}
-                    </div>
                 </div>
-                
-                <!-- Like Button -->
-                <button onclick="event.stopPropagation(); handleToggleLike('${item.id}')" 
-                    id="like-btn-${item.id}"
-                    class="absolute top-4 right-4 z-20 p-2.5 rounded-full backdrop-blur-md transition-all duration-300 ${item.is_liked ? 'bg-red-500 text-white scale-110' : 'bg-black/30 text-white hover:bg-white/20'}"
-                    title="${item.is_liked ? 'Unlike' : 'Like'}">
-                    <div class="flex items-center gap-1.5">
-                        <i data-lucide="heart" class="w-5 h-5 ${item.is_liked ? 'fill-current' : ''}"></i>
-                        <span class="text-xs font-bold">${item.likes_count || 0}</span>
-                    </div>
-                </button>
 
-                <div class="history-actions-overlay flex items-center justify-center gap-3 opacity-0 group-hover:opacity-100 transition-opacity">
-                    <button onclick="remixImage('${item.id}', true)" class="bg-white text-black p-3 rounded-full hover:scale-110 transition" title="Remix This">
-                        <i data-lucide="shuffle" class="w-6 h-6"></i>
-                    </button>
-                    <button onclick="showResult('${item.url}', ${item.seed})" class="bg-white/10 text-white p-3 rounded-full hover:bg-white/20 transition" title="View Full Screen">
-                        <i data-lucide="maximize-2" class="w-6 h-6"></i>
-                    </button>
+                <!-- Footer Stats & Actions -->
+                <div class="absolute bottom-0 left-0 right-0 p-4 transform sm:translate-y-4 group-hover:translate-y-0 transition-transform duration-300 z-10">
+                    <p class="text-xs text-white/90 line-clamp-1 mb-3 italic font-medium">"${wp.prompt}"</p>
+                    
+                    <div class="flex items-center justify-between">
+                         <div class="flex items-center gap-4">
+                            <!-- Like -->
+                            <button onclick="event.stopPropagation(); handleToggleLike('${wp.id}')" 
+                                id="like-btn-${wp.id}"
+                                class="flex items-center gap-1.5 transition group/like">
+                                <i data-lucide="heart" class="w-5 h-5 transition-transform group-active/like:scale-125 ${wp.is_liked ? 'fill-red-500 text-red-500' : 'text-white hover:text-pink-400'}"></i>
+                                <span class="text-xs font-bold text-white">${formatCount(wp.likes_count)}</span>
+                            </button>
+                            
+                            <!-- Views (Read Only) -->
+                            <div class="flex items-center gap-1.5 text-white/70">
+                                <i data-lucide="eye" class="w-4 h-4"></i>
+                                <span class="text-xs font-bold">${formatCount(wp.views_count)}</span>
+                            </div>
+                        </div>
+
+                        <div class="flex gap-2">
+                            <button onclick="event.stopPropagation(); remixImage('${wp.id}', true)" class="p-2 bg-white/10 rounded-full hover:bg-white/20 text-white backdrop-blur-sm transition">
+                                <i data-lucide="shuffle" class="w-4 h-4"></i>
+                            </button>
+                            <button onclick="event.stopPropagation(); downloadImageDirect('${wp.url}')" class="p-2 bg-white/10 rounded-full hover:bg-white/20 text-white backdrop-blur-sm transition">
+                                <i data-lucide="download" class="w-4 h-4"></i>
+                            </button>
+                        </div>
+                    </div>
                 </div>
             `;
             grid.appendChild(card);
@@ -1964,5 +2019,52 @@ window.handleUserLogin = async function (user) {
 };
 
 // Global Export
+window.publishHistoryItem = async function (timestamp) {
+    if (!state.currentUser) {
+        showToast('Please sign in to post to community', 'warning');
+        toggleAuthModal();
+        return;
+    }
+
+    const history = JSON.parse(localStorage.getItem('wallpaper_history') || '[]');
+    const item = history.find(i => i.timestamp === Number(timestamp));
+    if (!item) return;
+
+    try {
+        showToast('Publishing to community...', 'info');
+
+        // Check if exists
+        const { data: existing } = await supabaseClient
+            .from('wallpapers')
+            .select('id, is_public')
+            .eq('url', item.url)
+            .maybeSingle();
+
+        if (existing) {
+            if (existing.is_public) {
+                showToast('Already public!', 'info');
+            } else {
+                await db.togglePublicStatus(existing.id, true);
+                showToast('Published to community!', 'success');
+            }
+        } else {
+            // Upload new
+            await db.saveWallpaperToDB({
+                user_id: state.currentUser.id,
+                url: item.url,
+                prompt: item.prompt || 'Community Upload',
+                genre: item.genre,
+                style: item.style,
+                seed: item.seed,
+                is_public: true
+            });
+            showToast('Published to community!', 'success');
+        }
+    } catch (e) {
+        console.error(e);
+        showToast('Failed to publish', 'error');
+    }
+};
+
 window.renderCommunity = renderCommunity;
 window.syncLocalToCloud = syncLocalToCloud;

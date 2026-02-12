@@ -21,26 +21,47 @@ async function fetchUserWallpapers(userId) {
     return data;
 }
 
-async function fetchCommunityWallpapers(currentUserId = null, offset = 0, PAGE_SIZE = 24) {
-    const { data, error } = await clientInstance
+async function fetchCommunityWallpapers(currentUserId = null, offset = 0, PAGE_SIZE = 24, sort = 'new') {
+    let query = clientInstance
         .from('wallpapers')
         .select(`
             *,
-            profiles (username),
+            profiles (username, avatar_url),
             likes (user_id)
         `)
-        .eq('is_public', true)
-        .order('created_at', { ascending: false })
-        .range(offset, offset + PAGE_SIZE - 1);
+        .eq('is_public', true);
+
+    // Sorting Logic
+    if (sort === 'trending') {
+        // Most Watched
+        query = query.order('views_count', { ascending: false });
+    } else if (sort === 'top') {
+        // We can't easily sort by related table count without a materialized view or extra column.
+        // For now, 'top' will also use views or we can add a likes_count column later.
+        // Let's rely on views for now as a proxy for popularity.
+        query = query.order('views_count', { ascending: false });
+    } else {
+        // Newest
+        query = query.order('created_at', { ascending: false });
+    }
+
+    const { data, error } = await query.range(offset, offset + PAGE_SIZE - 1);
 
     if (error) throw error;
 
     return data.map(item => ({
         ...item,
         author_name: item.profiles ? item.profiles.username : 'Anonymous',
+        author_avatar: item.profiles?.avatar_url,
         likes_count: item.likes ? item.likes.length : 0,
+        views_count: item.views_count || 0,
         is_liked: currentUserId ? item.likes.some(l => l.user_id === currentUserId) : false
     }));
+}
+
+async function incrementViews(wallpaperId) {
+    const { error } = await clientInstance.rpc('increment_wallpaper_views', { p_wallpaper_id: wallpaperId });
+    if (error) console.error('Error incrementing views:', error);
 }
 
 async function toggleLike(wallpaperId, userId) {
@@ -275,6 +296,7 @@ window.db = {
     checkFollowStatus,
     checkAndResetCredits,
     deductCredits,
+    incrementViews,
     uploadAvatar,
     updateProfile
 };

@@ -910,6 +910,41 @@ body::after {
     opacity: 1;
 }
 
+/* Mobile Bottom Navigation */
+#mobile-nav {
+    padding-bottom: env(safe-area-inset-bottom, 12px);
+    box-shadow: 0 -10px 40px rgba(0, 0, 0, 0.5);
+}
+
+#mobile-nav button {
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+#mobile-nav button:active {
+    transform: scale(0.9);
+}
+
+/* Community Grid Responsive Fixes */
+@media (max-width: 640px) {
+    #community-grid {
+        grid-template-columns: 1fr !important;
+        /* Instagram-style feed */
+        gap: 32px;
+        /* More breathing room between posts */
+        padding-bottom: 80px;
+        /* Space for bottom nav */
+    }
+
+    .history-card {
+        height: 280px !important;
+    }
+
+    /* Hide desktop-only elements on mobile community view */
+    .lg\:max-w-none {
+        padding-top: 0;
+    }
+}
+
 .magnetic-btn {
     transition: transform 0.2s ease-out;
 }
@@ -921,6 +956,20 @@ body::after {
     gap: 1.25rem;
     width: 100%;
     margin-top: 1.5rem;
+}
+
+.batch-grid-item {
+    width: 100%;
+    height: auto;
+    aspect-ratio: inherit;
+    object-fit: cover;
+    border-radius: 12px;
+    cursor: pointer;
+    transition: transform 0.2s;
+}
+
+.batch-grid-item:hover {
+    transform: scale(1.02);
 }
 
 .batch-grid-item {
