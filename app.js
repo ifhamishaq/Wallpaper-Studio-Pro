@@ -1761,7 +1761,7 @@ async function syncLocalToCloud() {
         try {
             // We'll rely on saveWallpaperToDB or a check here
             // For now, simple check by URL
-            const { data } = await supabase.from('wallpapers').select('id').eq('url', item.url).maybeSingle();
+            const { data } = await supabaseClient.from('wallpapers').select('id').eq('url', item.url).maybeSingle();
 
             if (!data) {
                 await db.saveWallpaperToDB({
