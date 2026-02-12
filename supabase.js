@@ -227,26 +227,7 @@ async function fetchFollowingWallpapers(currentUserId, offset = 0, PAGE_SIZE = 2
             profiles (username),
             likes (user_id)
         `)
-    async function checkAndResetCredits(userId) {
-        // RPC call: p_user_id must match the function parameter name
-        const { data, error } = await clientInstance.rpc('check_and_reset_daily_credits', {
-            p_user_id: userId
-        });
-
-        if (error) {
-            console.warn('Credits RPC failed, checking profile directly:', error.message);
-            // Fallback: Check profile table directly
-            const { data: profile } = await clientInstance
-                .from('profiles')
-                .select('credits')
-                .eq('id', userId)
-                .maybeSingle();
-
-            return profile ? (profile.credits ?? 0) : 0;
-        }
-        return data;
-    }
-        .in ('user_id', followingIds)
+        .in('user_id', followingIds)
         .order('created_at', { ascending: false })
         .range(offset, offset + PAGE_SIZE - 1);
 
