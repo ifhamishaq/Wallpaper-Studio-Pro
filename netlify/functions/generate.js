@@ -14,7 +14,23 @@ export default async (request, context) => {
             });
         }
 
-        const body = await request.json();
+        const input = await request.json().catch(() => null);
+        if (!input || typeof input.prompt !== "string" || !input.prompt.trim()) {
+            return new Response(JSON.stringify({ error: "A prompt is required" }), {
+                status: 400,
+                headers: { "Content-Type": "application/json" }
+            });
+        }
+
+        // Forward only known fields, clamped to sane ranges (the endpoint is public).
+        const seed = Number(input.seed);
+        const body = {
+            prompt: input.prompt.slice(0, 1500),
+            width: clampInt(input.width, 256, 4096, 1024),
+            height: clampInt(input.height, 256, 4096, 1024),
+            num_steps: clampInt(input.num_steps, 1, 4, 4),
+            seed: Number.isFinite(seed) ? Math.floor(seed) : Math.floor(Math.random() * 1000000)
+        };
         let lastError = null;
         let lastStatus = 500;
 
@@ -100,4 +116,9 @@ function getApiKeys() {
         if (key) keys.push(key);
     }
     return keys;
+}
+
+function clampInt(value, min, max, fallback) {
+    const n = Math.round(Number(value));
+    return Number.isFinite(n) ? Math.min(max, Math.max(min, n)) : fallback;
 }

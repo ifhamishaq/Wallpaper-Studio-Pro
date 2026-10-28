@@ -1,0 +1,102 @@
+// Small shared helpers (no dependencies)
+
+export const $ = (sel, root = document) => root.querySelector(sel);
+export const $$ = (sel, root = document) => Array.from(root.querySelectorAll(sel));
+
+const ESC = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' };
+export const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ESC[c]);
+
+/** Only http(s) and image data URLs may reach an <img src>. */
+export const safeUrl = (u) => (/^(https?:\/\/|data:image\/)/i.test(u || '') ? u : '');
+
+/** Inline SVG icon from the sprite in index.html. */
+export const ic = (name, cls = '') => `<svg class="i ${cls}" aria-hidden="true"><use href="#i-${name}"/></svg>`;
+
+export const clamp = (n, lo, hi) => Math.min(hi, Math.max(lo, n));
+export const randInt = (n = 1_000_000) => Math.floor(Math.random() * n);
+export const pick = (arr) => arr[Math.floor(Math.random() * arr.length)];
+export const slug = (s) => String(s || '').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+
+export const prefersReducedMotion = () => matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+export function debounce(fn, wait) {
+    let t;
+    return (...args) => {
+        clearTimeout(t);
+        t = setTimeout(() => fn(...args), wait);
+    };
+}
+
+export function sleep(ms, signal) {
+    return new Promise((resolve, reject) => {
+        const t = setTimeout(resolve, ms);
+        signal?.addEventListener('abort', () => {
+            clearTimeout(t);
+            reject(new DOMException('Aborted', 'AbortError'));
+        }, { once: true });
+    });
+}
+
+/** localStorage that never throws (private mode, quota, disabled storage). */
+export const store = {
+    get(key, fallback) {
+        try {
+            const raw = localStorage.getItem(key);
+            return raw == null ? fallback : JSON.parse(raw);
+        } catch { return fallback; }
+    },
+    set(key, value) {
+        try { localStorage.setItem(key, JSON.stringify(value)); } catch { /* ignore */ }
+    },
+    remove(key) {
+        try { localStorage.removeItem(key); } catch { /* ignore */ }
+    }
+};
+
+/** Resize/compress a remote Unsplash photo on their CDN. */
+export function photo(url, w, h) {
+    try {
+        const u = new URL(url);
+        u.searchParams.set('w', w);
+        if (h) { u.searchParams.set('h', h); u.searchParams.set('fit', 'crop'); }
+        u.searchParams.set('q', '65');
+        u.searchParams.set('auto', 'format');
+        return u.toString();
+    } catch { return url; }
+}
+
+/** 0xRRGGBB -> hue (0-360) */
+export function hueOf(hex) {
+    const r = ((hex >> 16) & 255) / 255, g = ((hex >> 8) & 255) / 255, b = (hex & 255) / 255;
+    const max = Math.max(r, g, b), min = Math.min(r, g, b), d = max - min;
+    if (!d) return 220;
+    let h;
+    if (max === r) h = ((g - b) / d) % 6;
+    else if (max === g) h = (b - r) / d + 2;
+    else h = (r - g) / d + 4;
+    return (Math.round(h * 60) + 360) % 360;
+}
+
+const ICONS = { success: 'circle-check', error: 'circle-alert', info: 'info', warning: 'triangle-alert' };
+let toastTimer;
+export function toast(message, type = 'info', duration = 3200) {
+    const el = document.getElementById('toast');
+    if (!el) return;
+    el.className = `toast ${type}`;
+    el.innerHTML = `${ic(ICONS[type] || 'info')}<span>${esc(message)}</span>`;
+    // restart the enter transition
+    void el.offsetWidth;
+    el.classList.add('show');
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => el.classList.remove('show'), duration);
+}
+
+/** Stable initial + hue for avatar placeholders (no third-party avatar service). */
+export function avatarHtml(name, url, cls = '') {
+    const safe = safeUrl(url);
+    if (safe) return `<img class="av ${cls}" src="${esc(safe)}" alt="" loading="lazy" decoding="async" referrerpolicy="no-referrer">`;
+    const n = String(name || '?').trim() || '?';
+    let h = 0;
+    for (const ch of n) h = (h * 31 + ch.charCodeAt(0)) % 360;
+    return `<span class="av ${cls}" style="--h:${h}" aria-hidden="true">${esc(n[0].toUpperCase())}</span>`;
+}
