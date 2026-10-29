@@ -1,0 +1,23 @@
+{
+  "name": "Wallpaper Studio Pro",
+  "short_name": "Studio",
+  "description": "Create AI wallpapers for your phone and desktop.",
+  "start_url": "/#/create",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#050507",
+  "theme_color": "#050507",
+  "categories": ["photo", "design", "entertainment"],
+  "icons": [
+    { "src": "icons/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "icons/icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" },
+    { "src": "icons/icon.svg", "sizes": "any", "type": "image/svg+xml" }
+  ],
+  "shortcuts": [
+    { "name": "Create", "url": "/#/create" },
+    { "name": "Explore", "url": "/#/explore" },
+    { "name": "Library", "url": "/#/library" }
+  ]
+}

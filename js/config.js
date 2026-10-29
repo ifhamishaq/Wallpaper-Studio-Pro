@@ -245,13 +245,13 @@ export const STYLES = [
     }
 ];
 
-// Output formats. The hero preview takes the aspect ratio of the selected one.
+// Output formats. `kind` decides which device mock the preview uses.
 export const FORMATS = [
-    { id: 'phone', label: 'Phone', w: 1284, h: 2778 },
-    { id: 'desktop', label: 'Desktop', w: 1920, h: 1080 },
-    { id: 'laptop', label: 'Laptop', w: 2560, h: 1600 },
-    { id: 'ultrawide', label: 'Ultrawide', w: 3440, h: 1440 },
-    { id: 'square', label: 'Square', w: 1024, h: 1024 }
+    { id: 'phone', label: 'Phone', kind: 'phone', w: 1284, h: 2778, hint: 'iPhone & Android lock / home screen' },
+    { id: 'laptop', label: 'Laptop', kind: 'monitor', w: 2560, h: 1600, hint: 'MacBook & 16:10 laptops' },
+    { id: 'desktop', label: 'Desktop', kind: 'monitor', w: 1920, h: 1080, hint: 'Standard 16:9 monitor' },
+    { id: 'ultrawide', label: 'Ultrawide', kind: 'monitor', w: 3440, h: 1440, hint: '21:9 ultrawide monitor' },
+    { id: 'square', label: 'Square', kind: 'square', w: 1024, h: 1024, hint: 'Avatars & social posts' }
 ];
 
 export const TONES = [
@@ -282,6 +282,12 @@ export const MODIFIERS = [
     'frozen in time'
 ];
 
+// Models offered in the picker. The server (netlify/functions/generate.js) must have a
+// matching adapter. Steps are clamped per model.
+export const MODELS = [
+    { id: 'flux-schnell', name: 'Flux Schnell', blurb: 'Fast, sharp and detailed. Best all-rounder.', maxSteps: 4 }
+];
+
 export const API = {
     ENDPOINT: '/.netlify/functions/generate',
     MAX_RETRIES: 3,
@@ -289,7 +295,7 @@ export const API = {
 };
 
 export const APP = {
-    MAX_HISTORY: 20,
+    MAX_HISTORY: 60,
     CREDIT_COST: 10,
     DAILY_CREDITS: 100
 };

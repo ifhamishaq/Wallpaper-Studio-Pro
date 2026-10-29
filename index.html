@@ -1,424 +1,436 @@
 <!DOCTYPE html>
-<html lang="en" data-theme="dark">
+<html lang="en" data-view="create" data-lock="on">
 
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-    <meta name="theme-color" content="#07070b">
-    <title>Wallpaper Studio Pro — AI Wallpaper Generator</title>
+    <meta name="theme-color" content="#050507">
+    <meta name="color-scheme" content="dark">
+    <title>Wallpaper Studio Pro — AI Wallpapers</title>
     <meta name="description"
-        content="Design phone and desktop wallpapers with AI. Mix a genre with an art style, pick your device, and generate in seconds.">
-    <meta name="author" content="Wallpaper Studio Pro">
+        content="Create stunning AI wallpapers for your phone and desktop. Preview them on a real device, then download in seconds.">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Studio">
 
-    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Cdefs%3E%3ClinearGradient id='g' x1='0' y1='0' x2='1' y2='1'%3E%3Cstop offset='0' stop-color='%23ff6ec7'/%3E%3Cstop offset='1' stop-color='%236a5cff'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width='64' height='64' rx='18' fill='url(%23g)'/%3E%3Cg fill='%23fff'%3E%3Ccircle cx='20' cy='20' r='3'/%3E%3Ccircle cx='32' cy='20' r='3'/%3E%3Ccircle cx='44' cy='20' r='3'/%3E%3Ccircle cx='32' cy='32' r='3'/%3E%3Ccircle cx='44' cy='32' r='3'/%3E%3Ccircle cx='44' cy='44' r='3'/%3E%3C/g%3E%3C/svg%3E">
+    <link rel="manifest" href="manifest.webmanifest">
+    <link rel="icon" type="image/svg+xml" href="icons/icon.svg">
+    <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
 
-    <!-- Self-hosted fonts: no third-party round-trip, no render-blocking CSS -->
     <link rel="preload" href="fonts/geist-latin.woff2" as="font" type="font/woff2" crossorigin>
     <link rel="preload" href="fonts/doto-latin.woff2" as="font" type="font/woff2" crossorigin>
     <link rel="preconnect" href="https://images.unsplash.com" crossorigin>
 
-    <!-- Apply the saved/system theme before first paint (no flash) -->
-    <script>
-        try {
-            var t = localStorage.getItem('wsp_theme');
-            if (t !== 'light' && t !== 'dark') t = matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark';
-            document.documentElement.dataset.theme = t;
-        } catch (e) { }
-    </script>
-
     <link rel="stylesheet" href="style.css">
-    <script type="module" src="app.js"></script>
+    <script type="module" src="js/main.js"></script>
 </head>
 
-<body data-view="create">
-    <!-- Icon sprite -->
+<body>
     <svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false">
         <defs>
+            <linearGradient id="mark-g" x1="0" y1="0" x2="1" y2="1">
+                <stop offset="0" stop-color="#ff7ad9" />
+                <stop offset="1" stop-color="#6a5cff" />
+            </linearGradient>
+            <symbol id="mark" viewBox="0 0 32 32">
+                <rect width="32" height="32" rx="10" fill="url(#mark-g)" />
+                <rect x="7" y="6.5" width="12.5" height="18" rx="4" fill="#fff" fill-opacity=".5" />
+                <rect x="12.5" y="9.5" width="12.5" height="18" rx="4" fill="#fff" />
+            </symbol>
             <symbol id="i-camera" viewBox="0 0 24 24"><path d="M13.997 4a2 2 0 0 1 1.76 1.05l.486.9A2 2 0 0 0 18.003 7H20a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V9a2 2 0 0 1 2-2h1.997a2 2 0 0 0 1.759-1.048l.489-.904A2 2 0 0 1 10.004 4z" /> <circle cx="12" cy="13" r="3" /></symbol>
-            <symbol id="i-chevron-left" viewBox="0 0 24 24"><path d="m15 18-6-6 6-6" /></symbol>
-            <symbol id="i-chevron-right" viewBox="0 0 24 24"><path d="m9 18 6-6-6-6" /></symbol>
+            <symbol id="i-check" viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5" /></symbol>
+            <symbol id="i-chevron-down" viewBox="0 0 24 24"><path d="m6 9 6 6 6-6" /></symbol>
+            <symbol id="i-chevron-up" viewBox="0 0 24 24"><path d="m18 15-6-6-6 6" /></symbol>
             <symbol id="i-circle-alert" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" /> <line x1="12" x2="12" y1="8" y2="12" /> <line x1="12" x2="12.01" y1="16" y2="16" /></symbol>
             <symbol id="i-circle-check" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" /> <path d="m16 9-5.5 5.5L8 12" /></symbol>
             <symbol id="i-cloud-upload" viewBox="0 0 24 24"><path d="M12 13v8" /> <path d="M4 14.899A7 7 0 1 1 15.71 8h1.79a4.5 4.5 0 0 1 2.5 8.242" /> <path d="m8 17 4-4 4 4" /></symbol>
             <symbol id="i-compass" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" /> <path d="m16.24 7.76-1.804 5.411a2 2 0 0 1-1.265 1.265L7.76 16.24l1.804-5.411a2 2 0 0 1 1.265-1.265z" /></symbol>
+            <symbol id="i-copy" viewBox="0 0 24 24"><rect width="14" height="14" x="8" y="8" rx="2" ry="2" /> <path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2" /></symbol>
+            <symbol id="i-crop" viewBox="0 0 24 24"><path d="M6 2v14a2 2 0 0 0 2 2h14" /> <path d="M18 22V8a2 2 0 0 0-2-2H2" /></symbol>
             <symbol id="i-dice-5" viewBox="0 0 24 24"><rect width="18" height="18" x="3" y="3" rx="2" ry="2" /> <path d="M16 8h.01" /> <path d="M8 8h.01" /> <path d="M8 16h.01" /> <path d="M16 16h.01" /> <path d="M12 12h.01" /></symbol>
             <symbol id="i-download" viewBox="0 0 24 24"><path d="M12 15V3" /> <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" /> <path d="m7 10 5 5 5-5" /></symbol>
             <symbol id="i-expand" viewBox="0 0 24 24"><path d="m15 15 6 6" /> <path d="m15 9 6-6" /> <path d="M21 16v5h-5" /> <path d="M21 8V3h-5" /> <path d="M3 16v5h5" /> <path d="m3 21 6-6" /> <path d="M3 8V3h5" /> <path d="M9 9 3 3" /></symbol>
             <symbol id="i-eye" viewBox="0 0 24 24"><path d="M2.062 12.348a1 1 0 0 1 0-.696 10.75 10.75 0 0 1 19.876 0 1 1 0 0 1 0 .696 10.75 10.75 0 0 1-19.876 0" /> <circle cx="12" cy="12" r="3" /></symbol>
+            <symbol id="i-frame" viewBox="0 0 24 24"><line x1="22" x2="2" y1="6" y2="6" /> <line x1="22" x2="2" y1="18" y2="18" /> <line x1="6" x2="6" y1="2" y2="22" /> <line x1="18" x2="18" y1="2" y2="22" /></symbol>
             <symbol id="i-globe" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" /> <path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20" /> <path d="M2 12h20" /></symbol>
             <symbol id="i-heart" viewBox="0 0 24 24"><path d="M2 9.5a5.5 5.5 0 0 1 9.591-3.676.56.56 0 0 0 .818 0A5.49 5.49 0 0 1 22 9.5c0 2.29-1.5 4-3 5.5l-5.492 5.313a2 2 0 0 1-3 .019L5 15c-1.5-1.5-3-3.2-3-5.5" /></symbol>
             <symbol id="i-image" viewBox="0 0 24 24"><rect width="18" height="18" x="3" y="3" rx="2" ry="2" /> <circle cx="9" cy="9" r="2" /> <path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21" /></symbol>
             <symbol id="i-info" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" /> <path d="M12 16v-4" /> <path d="M12 8h.01" /></symbol>
-            <symbol id="i-layers" viewBox="0 0 24 24"><path d="M12.83 2.18a2 2 0 0 0-1.66 0L2.6 6.08a1 1 0 0 0 0 1.83l8.58 3.91a2 2 0 0 0 1.66 0l8.58-3.9a1 1 0 0 0 0-1.83z" /> <path d="M2 12a1 1 0 0 0 .58.91l8.6 3.91a2 2 0 0 0 1.65 0l8.58-3.9A1 1 0 0 0 22 12" /> <path d="M2 17a1 1 0 0 0 .58.91l8.6 3.91a2 2 0 0 0 1.65 0l8.58-3.9A1 1 0 0 0 22 17" /></symbol>
+            <symbol id="i-laptop" viewBox="0 0 24 24"><path d="M18 5a2 2 0 0 1 2 2v8.526a2 2 0 0 0 .212.897l1.068 2.127a1 1 0 0 1-.9 1.45H3.62a1 1 0 0 1-.9-1.45l1.068-2.127A2 2 0 0 0 4 15.526V7a2 2 0 0 1 2-2z" /> <path d="M20.054 15.987H3.946" /></symbol>
             <symbol id="i-layout-grid" viewBox="0 0 24 24"><rect width="7" height="7" x="3" y="3" rx="1" /> <rect width="7" height="7" x="14" y="3" rx="1" /> <rect width="7" height="7" x="14" y="14" rx="1" /> <rect width="7" height="7" x="3" y="14" rx="1" /></symbol>
-            <symbol id="i-link" viewBox="0 0 24 24"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" /> <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" /></symbol>
+            <symbol id="i-library" viewBox="0 0 24 24"><path d="m16 6 4 14" /> <path d="M12 6v14" /> <path d="M8 8v12" /> <path d="M4 4v16" /></symbol>
             <symbol id="i-lock" viewBox="0 0 24 24"><rect width="18" height="11" x="3" y="11" rx="2" ry="2" /> <path d="M7 11V7a5 5 0 0 1 10 0v4" /></symbol>
             <symbol id="i-log-out" viewBox="0 0 24 24"><path d="m16 17 5-5-5-5" /> <path d="M21 12H9" /> <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" /></symbol>
-            <symbol id="i-moon" viewBox="0 0 24 24"><path d="M20.985 12.486a9 9 0 1 1-9.473-9.472c.405-.022.617.46.402.803a6 6 0 0 0 8.268 8.268c.344-.215.825-.004.803.401" /></symbol>
-            <symbol id="i-palette" viewBox="0 0 24 24"><path d="M12 22a1 1 0 0 1 0-20 10 9 0 0 1 10 9 5 5 0 0 1-5 5h-2.25a1.75 1.75 0 0 0-1.4 2.8l.3.4a1.75 1.75 0 0 1-1.4 2.8z" /> <circle cx="13.5" cy="6.5" r=".5" fill="currentColor" /> <circle cx="17.5" cy="10.5" r=".5" fill="currentColor" /> <circle cx="6.5" cy="12.5" r=".5" fill="currentColor" /> <circle cx="8.5" cy="7.5" r=".5" fill="currentColor" /></symbol>
-            <symbol id="i-plus" viewBox="0 0 24 24"><path d="M5 12h14" /> <path d="M12 5v14" /></symbol>
-            <symbol id="i-rotate-ccw" viewBox="0 0 24 24"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8" /> <path d="M3 3v5h5" /></symbol>
+            <symbol id="i-monitor" viewBox="0 0 24 24"><rect width="20" height="14" x="2" y="3" rx="2" /> <line x1="8" x2="16" y1="21" y2="21" /> <line x1="12" x2="12" y1="17" y2="21" /></symbol>
+            <symbol id="i-phone" viewBox="0 0 24 24"><path d="M13.832 16.568a1 1 0 0 0 1.213-.303l.355-.465A2 2 0 0 1 17 15h3a2 2 0 0 1 2 2v3a2 2 0 0 1-2 2A18 18 0 0 1 2 4a2 2 0 0 1 2-2h3a2 2 0 0 1 2 2v3a2 2 0 0 1-.8 1.6l-.468.351a1 1 0 0 0-.292 1.233 14 14 0 0 0 6.392 6.384" /></symbol>
             <symbol id="i-search" viewBox="0 0 24 24"><path d="m21 21-4.34-4.34" /> <circle cx="11" cy="11" r="8" /></symbol>
-            <symbol id="i-settings" viewBox="0 0 24 24"><path d="M9.671 4.136a2.34 2.34 0 0 1 4.659 0 2.34 2.34 0 0 0 3.319 1.915 2.34 2.34 0 0 1 2.33 4.033 2.34 2.34 0 0 0 0 3.831 2.34 2.34 0 0 1-2.33 4.033 2.34 2.34 0 0 0-3.319 1.915 2.34 2.34 0 0 1-4.659 0 2.34 2.34 0 0 0-3.32-1.915 2.34 2.34 0 0 1-2.33-4.033 2.34 2.34 0 0 0 0-3.831A2.34 2.34 0 0 1 6.35 6.051a2.34 2.34 0 0 0 3.319-1.915" /> <circle cx="12" cy="12" r="3" /></symbol>
+            <symbol id="i-section" viewBox="0 0 24 24"><path d="M16 5a4 3 0 0 0-8 0c0 4 8 3 8 7a4 3 0 0 1-8 0" /> <path d="M8 19a4 3 0 0 0 8 0c0-4-8-3-8-7a4 3 0 0 1 8 0" /></symbol>
             <symbol id="i-share-2" viewBox="0 0 24 24"><circle cx="18" cy="5" r="3" /> <circle cx="6" cy="12" r="3" /> <circle cx="18" cy="19" r="3" /> <line x1="8.59" x2="15.42" y1="13.51" y2="17.49" /> <line x1="15.41" x2="8.59" y1="6.51" y2="10.49" /></symbol>
             <symbol id="i-shuffle" viewBox="0 0 24 24"><path d="m18 14 4 4-4 4" /> <path d="m18 2 4 4-4 4" /> <path d="M2 18h1.973a4 4 0 0 0 3.3-1.7l5.454-8.6a4 4 0 0 1 3.3-1.7H22" /> <path d="M2 6h1.972a4 4 0 0 1 3.6 2.2" /> <path d="M22 18h-6.041a4 4 0 0 1-3.3-1.8l-.359-.45" /></symbol>
+            <symbol id="i-sliders-horizontal" viewBox="0 0 24 24"><path d="M10 5H3" /> <path d="M12 19H3" /> <path d="M14 3v4" /> <path d="M16 17v4" /> <path d="M21 12h-9" /> <path d="M21 19h-5" /> <path d="M21 5h-7" /> <path d="M8 10v4" /> <path d="M8 12H3" /></symbol>
+            <symbol id="i-space" viewBox="0 0 24 24"><path d="M22 17v1c0 .5-.5 1-1 1H3c-.5 0-1-.5-1-1v-1" /></symbol>
+            <symbol id="i-sparkles" viewBox="0 0 24 24"><path d="M11.017 2.814a1 1 0 0 1 1.966 0l1.051 5.558a2 2 0 0 0 1.594 1.594l5.558 1.051a1 1 0 0 1 0 1.966l-5.558 1.051a2 2 0 0 0-1.594 1.594l-1.051 5.558a1 1 0 0 1-1.966 0l-1.051-5.558a2 2 0 0 0-1.594-1.594l-5.558-1.051a1 1 0 0 1 0-1.966l5.558-1.051a2 2 0 0 0 1.594-1.594z" /> <path d="M20 2v4" /> <path d="M22 4h-4" /> <circle cx="4" cy="20" r="2" /></symbol>
+            <symbol id="i-square" viewBox="0 0 24 24"><rect width="18" height="18" x="3" y="3" rx="2" /></symbol>
             <symbol id="i-star" viewBox="0 0 24 24"><path d="M11.525 2.295a.53.53 0 0 1 .95 0l2.31 4.679a2.123 2.123 0 0 0 1.595 1.16l5.166.756a.53.53 0 0 1 .294.904l-3.736 3.638a2.123 2.123 0 0 0-.611 1.878l.882 5.14a.53.53 0 0 1-.771.56l-4.618-2.428a2.122 2.122 0 0 0-1.973 0L6.396 21.01a.53.53 0 0 1-.77-.56l.881-5.139a2.122 2.122 0 0 0-.611-1.879L2.16 9.795a.53.53 0 0 1 .294-.906l5.165-.755a2.122 2.122 0 0 0 1.597-1.16z" /></symbol>
-            <symbol id="i-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4" /> <path d="M12 2v2" /> <path d="M12 20v2" /> <path d="m4.93 4.93 1.41 1.41" /> <path d="m17.66 17.66 1.41 1.41" /> <path d="M2 12h2" /> <path d="M20 12h2" /> <path d="m6.34 17.66-1.41 1.41" /> <path d="m19.07 4.93-1.41 1.41" /></symbol>
+            <symbol id="i-tag" viewBox="0 0 24 24"><path d="M12.586 2.586A2 2 0 0 0 11.172 2H4a2 2 0 0 0-2 2v7.172a2 2 0 0 0 .586 1.414l8.704 8.704a2.426 2.426 0 0 0 3.42 0l6.58-6.58a2.426 2.426 0 0 0 0-3.42z" /> <circle cx="7.5" cy="7.5" r=".5" fill="currentColor" /></symbol>
+            <symbol id="i-tags" viewBox="0 0 24 24"><path d="M13.172 2a2 2 0 0 1 1.414.586l6.71 6.71a2.4 2.4 0 0 1 0 3.408l-4.592 4.592a2.4 2.4 0 0 1-3.408 0l-6.71-6.71A2 2 0 0 1 6 9.172V3a1 1 0 0 1 1-1z" /> <path d="M2 7v6.172a2 2 0 0 0 .586 1.414l6.71 6.71a2.4 2.4 0 0 0 3.191.193" /> <circle cx="10.5" cy="6.5" r=".5" fill="currentColor" /></symbol>
             <symbol id="i-trash-2" viewBox="0 0 24 24"><path d="M10 11v6" /> <path d="M14 11v6" /> <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6" /> <path d="M3 6h18" /> <path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" /></symbol>
             <symbol id="i-triangle-alert" viewBox="0 0 24 24"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3" /> <path d="M12 9v4" /> <path d="M12 17h.01" /></symbol>
             <symbol id="i-user" viewBox="0 0 24 24"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2" /> <circle cx="12" cy="7" r="4" /></symbol>
+            <symbol id="i-wallpaper" viewBox="0 0 24 24"><path d="M12 17v4" /> <path d="M8 21h8" /> <path d="m9 17 6.1-6.1a2 2 0 0 1 2.81.01L22 15" /> <circle cx="8" cy="9" r="2" /> <rect x="2" y="3" width="20" height="14" rx="2" /></symbol>
             <symbol id="i-wand-sparkles" viewBox="0 0 24 24"><path d="m21.64 3.64-1.28-1.28a1.21 1.21 0 0 0-1.72 0L2.36 18.64a1.21 1.21 0 0 0 0 1.72l1.28 1.28a1.2 1.2 0 0 0 1.72 0L21.64 5.36a1.2 1.2 0 0 0 0-1.72" /> <path d="m14 7 3 3" /> <path d="M5 6v4" /> <path d="M19 14v4" /> <path d="M10 2v2" /> <path d="M7 8H3" /> <path d="M21 16h-4" /> <path d="M11 3H9" /></symbol>
             <symbol id="i-x" viewBox="0 0 24 24"><path d="M18 6 6 18" /> <path d="m6 6 12 12" /></symbol>
+            <symbol id="i-zap" viewBox="0 0 24 24"><path d="M15.914 4a1.5 1.5 0 00-2.474-1.561l-9 9A1.5 1.5 0 005.5 14h4.002a.5.5 0 01.471.666L8.086 20a1.5 1.5 0 002.475 1.56l9-9A1.5 1.5 0 0018.5 10h-3.997a.5.5 0 01-.472-.667z" /></symbol>
         </defs>
     </svg>
 
-    <!-- Ambient background: three gradient blobs, transform-only animation -->
-    <div class="bg" id="bg" aria-hidden="true"><i></i><i></i><i></i></div>
-    <div class="grain" aria-hidden="true"></div>
-
-    <header class="topbar">
-        <h1 class="sr-only">Wallpaper Studio Pro</h1>
-        <a class="brand" href="#" data-action="view" data-view="create" aria-label="Wallpaper Studio Pro — home">
-            <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i><i></i></span>
-            <span class="brand-name">Wallpaper Studio</span>
-            <span class="brand-pro">Pro</span>
-        </a>
-
-        <nav class="seg nav" aria-label="Primary">
-            <button type="button" data-action="view" data-view="create" aria-current="page">Create</button>
-            <button type="button" data-action="view" data-view="community">Community</button>
-        </nav>
-
-        <div class="top-actions">
-            <button type="button" class="credits" id="credits-chip" data-action="account" hidden
-                title="Daily credits">
-                <span class="dm" id="credits-num">--</span><span class="credits-label">credits</span>
+    <div class="app">
+        <!-- Desktop rail -->
+        <nav class="rail" aria-label="Primary">
+            <a class="rail-logo" href="#/create" aria-label="Wallpaper Studio Pro">
+                <svg class="mark" aria-hidden="true"><use href="#mark" /></svg>
+            </a>
+            <button type="button" class="nav-btn" data-action="nav" data-to="explore">
+                <svg class="i" aria-hidden="true"><use href="#i-compass" /></svg><span>Explore</span>
             </button>
-            <button type="button" class="icon-btn" data-action="theme" aria-label="Switch theme">
-                <svg class="i i-sun" aria-hidden="true"><use href="#i-sun" /></svg>
-                <svg class="i i-moon" aria-hidden="true"><use href="#i-moon" /></svg>
+            <button type="button" class="nav-btn" data-action="nav" data-to="create" aria-current="page">
+                <svg class="i" aria-hidden="true"><use href="#i-wand-sparkles" /></svg><span>Create</span>
             </button>
-            <button type="button" class="icon-btn" data-action="settings" aria-label="Settings">
-                <svg class="i" aria-hidden="true"><use href="#i-settings" /></svg>
+            <button type="button" class="nav-btn" data-action="nav" data-to="library">
+                <svg class="i" aria-hidden="true"><use href="#i-layout-grid" /></svg><span>Library</span>
             </button>
-            <button type="button" class="icon-btn btn-collection" data-action="collection" aria-label="Open collection">
-                <svg class="i" aria-hidden="true"><use href="#i-layout-grid" /></svg>
-            </button>
-            <button type="button" class="icon-btn account-btn" id="account-btn" data-action="account"
-                aria-label="Account">
+            <span class="rail-spacer"></span>
+            <button type="button" class="nav-btn avatar-btn" data-action="account" aria-label="Sign in">
                 <svg class="i" aria-hidden="true"><use href="#i-user" /></svg>
             </button>
-        </div>
-    </header>
+        </nav>
 
-    <div class="shell">
-        <div class="content">
-            <!-- ============================== CREATE ============================== -->
-            <main id="view-create" class="view studio">
-                <section class="stage" aria-label="Preview">
-                    <div class="hero" id="hero" data-state="idle" style="--r:.4622">
-                        <div class="hero-media" aria-hidden="true">
-                            <img class="hero-img" id="hero-a" alt="" decoding="async">
-                            <img class="hero-img" id="hero-b" alt="" decoding="async">
+        <main class="views">
+            <!-- ================================ EXPLORE ================================ -->
+            <section class="view" id="view-explore" data-active="false" inert aria-label="Explore">
+                <div class="pager-host" data-pager-host>
+                    <div class="pager" id="explore-pager" tabindex="0" aria-label="Community wallpapers"></div>
+                    <div class="explore-status" id="explore-status" hidden></div>
+
+                    <header class="topbar explore-top">
+                        <div class="tabs" id="explore-tabs" role="tablist" aria-label="Feed">
+                            <button type="button" role="tab" data-action="explore-sort" data-sort="new" aria-selected="true">Latest</button>
+                            <button type="button" role="tab" data-action="explore-sort" data-sort="top" aria-selected="false">Top</button>
+                            <button type="button" role="tab" data-action="explore-sort" data-sort="following" aria-selected="false">Following</button>
                         </div>
-                        <div class="hero-shade" aria-hidden="true"></div>
-                        <canvas class="hero-dots" id="dots" aria-hidden="true"></canvas>
-
-                        <div class="hero-top">
-                            <span class="hero-index dm" id="hero-index" aria-hidden="true">01</span>
-                            <button type="button" class="icon-btn glass" data-action="randomize"
-                                aria-label="Surprise me (R)" title="Surprise me (R)">
-                                <svg class="i" aria-hidden="true"><use href="#i-dice-5" /></svg>
+                        <div class="top-actions">
+                            <button type="button" class="icon-btn glass" data-action="explore-search" aria-label="Search">
+                                <svg class="i" aria-hidden="true"><use href="#i-search" /></svg>
+                            </button>
+                            <button type="button" class="icon-btn glass" data-action="toggle-lock" aria-pressed="true"
+                                aria-label="Lock-screen preview" title="Lock-screen preview">
+                                <svg class="i" aria-hidden="true"><use href="#i-lock" /></svg>
+                            </button>
+                            <button type="button" class="icon-btn glass avatar-btn only-mobile" data-action="account" aria-label="Sign in">
+                                <svg class="i" aria-hidden="true"><use href="#i-user" /></svg>
                             </button>
                         </div>
+                    </header>
+                    <div class="filters" id="explore-filters" hidden></div>
 
-                        <div class="hero-copy">
-                            <p class="eyebrow">Genre</p>
-                            <p class="hero-title" id="genre-name">Cyber City</p>
-                            <p class="hero-plus" aria-hidden="true"><svg class="i" aria-hidden="true"><use
-                                        href="#i-plus" /></svg></p>
-                            <p class="eyebrow">Style</p>
-                            <p class="hero-sub" id="style-name">Minimalist</p>
-                        </div>
-
-                        <div class="hero-busy" role="status" aria-live="polite">
-                            <p class="busy-time dm" id="busy-time" aria-hidden="true">0.0</p>
-                            <p class="busy-text" id="busy-text">Working…</p>
-                            <button type="button" class="btn btn-glass btn-sm" data-action="cancel">Cancel</button>
-                        </div>
-
-                        <div class="hero-result">
-                            <div class="result-media" id="result-media"></div>
-                            <div class="result-bar">
-                                <button type="button" class="btn btn-primary btn-sm" data-action="open-result"
-                                    id="result-open">
-                                    <svg class="i" aria-hidden="true"><use href="#i-expand" /></svg><span>Open</span>
-                                </button>
-                                <button type="button" class="btn btn-glass btn-sm" data-action="download-result"
-                                    id="result-download">
-                                    <svg class="i" aria-hidden="true"><use href="#i-download" /></svg><span>Save</span>
-                                </button>
-                                <button type="button" class="icon-btn glass" data-action="close-result"
-                                    aria-label="Back to editor">
-                                    <svg class="i" aria-hidden="true"><use href="#i-x" /></svg>
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="formats" id="formats" role="radiogroup" aria-label="Wallpaper format"></div>
-                    <p class="dims dm" id="dims" aria-hidden="true">1284 × 2778</p>
-                </section>
-
-                <section class="controls" aria-label="Controls">
-                    <div class="block">
-                        <div class="block-head">
-                            <h2>Genre</h2>
-                            <div class="block-tools">
-                                <span class="count dm" id="genre-count" aria-hidden="true"></span>
-                                <button type="button" class="mini-arrow" data-action="step" data-type="genre" data-dir="-1"
-                                    aria-label="Previous genre"><svg class="i" aria-hidden="true"><use href="#i-chevron-left" /></svg></button>
-                                <button type="button" class="mini-arrow" data-action="step" data-type="genre" data-dir="1"
-                                    aria-label="Next genre"><svg class="i" aria-hidden="true"><use href="#i-chevron-right" /></svg></button>
-                            </div>
-                        </div>
-                        <div class="rail" id="genre-rail" role="radiogroup" aria-label="Genre"></div>
-                    </div>
-
-                    <div class="block">
-                        <div class="block-head">
-                            <h2>Style</h2>
-                            <div class="block-tools">
-                                <span class="count dm" id="style-count" aria-hidden="true"></span>
-                                <button type="button" class="mini-arrow" data-action="step" data-type="style" data-dir="-1"
-                                    aria-label="Previous style"><svg class="i" aria-hidden="true"><use href="#i-chevron-left" /></svg></button>
-                                <button type="button" class="mini-arrow" data-action="step" data-type="style" data-dir="1"
-                                    aria-label="Next style"><svg class="i" aria-hidden="true"><use href="#i-chevron-right" /></svg></button>
-                            </div>
-                        </div>
-                        <div class="rail" id="style-rail" role="radiogroup" aria-label="Style"></div>
-                    </div>
-
-                    <div class="block">
-                        <div class="block-head">
-                            <h2><label for="prompt">Prompt</label></h2>
-                            <button type="button" class="link-btn" id="prompt-reset" data-action="prompt-reset" hidden>
-                                <svg class="i" aria-hidden="true"><use href="#i-rotate-ccw" /></svg> Reset to auto
-                            </button>
-                        </div>
-                        <textarea id="prompt" class="prompt" rows="4" spellcheck="false"
-                            aria-describedby="prompt-hint"></textarea>
-                        <p class="hint" id="prompt-hint">Built from your genre and style. Edit it freely — your text
-                            is used as-is.</p>
-                        <div class="tones" id="tones" role="group" aria-label="Color tone"></div>
-                        <p class="seed-note" id="seed-note" hidden>
-                            Seed <b class="dm" id="seed-note-value"></b>
-                            <button type="button" class="link-btn" data-action="seed-clear">Clear</button>
-                        </p>
-                    </div>
-
-                    <div class="cta" id="cta">
-                        <button type="button" class="btn btn-primary btn-lg grow" id="generate-btn"
-                            data-action="generate">
-                            <svg class="i" aria-hidden="true"><use href="#i-wand-sparkles" /></svg>
-                            <span id="generate-label">Create wallpaper</span>
+                    <div class="pager-nav" aria-hidden="false">
+                        <button type="button" class="icon-btn glass" data-action="explore-prev" aria-label="Previous wallpaper">
+                            <svg class="i" aria-hidden="true"><use href="#i-chevron-up" /></svg>
                         </button>
-                        <button type="button" class="btn btn-glass btn-lg btn-variations" id="batch-btn"
-                            data-action="batch" aria-pressed="false" title="Generate 4 variations">
-                            <svg class="i" aria-hidden="true"><use href="#i-layers" /></svg><span>×4</span>
+                        <button type="button" class="icon-btn glass" data-action="explore-next" aria-label="Next wallpaper">
+                            <svg class="i" aria-hidden="true"><use href="#i-chevron-down" /></svg>
                         </button>
                     </div>
-                </section>
-            </main>
+                </div>
+            </section>
 
-            <!-- ============================== COMMUNITY ============================== -->
-            <main id="view-community" class="view community" hidden>
-                <header class="page-head">
-                    <p class="eyebrow">Community</p>
-                    <h2 class="page-title">Made by creators<br>around the world</h2>
+            <!-- ================================ CREATE ================================ -->
+            <section class="view" id="view-create" data-active="true" aria-label="Create">
+                <div class="bd" aria-hidden="true"><img id="bd-a" alt=""><img id="bd-b" alt=""></div>
+
+                <header class="topbar create-top">
+                    <span class="brand"><svg class="mark" aria-hidden="true"><use href="#mark" /></svg><b>Studio</b></span>
+                    <div class="top-actions">
+                        <button type="button" class="credits-chip" data-action="account" hidden title="Credits left today">
+                            <svg class="i" aria-hidden="true"><use href="#i-zap" /></svg><span class="credits-num dm">--</span>
+                        </button>
+                        <button type="button" class="icon-btn glass avatar-btn only-mobile" data-action="account" aria-label="Sign in">
+                            <svg class="i" aria-hidden="true"><use href="#i-user" /></svg>
+                        </button>
+                    </div>
                 </header>
 
-                <div class="toolbar">
-                    <label class="search">
-                        <svg class="i" aria-hidden="true"><use href="#i-search" /></svg>
-                        <input id="community-search" type="search" placeholder="Search prompts, genres, styles"
-                            aria-label="Search community" autocomplete="off">
-                    </label>
-                    <div class="seg" role="group" aria-label="Feed">
-                        <button type="button" data-action="source" data-source="all" aria-pressed="true">Explore</button>
-                        <button type="button" data-action="source" data-source="following"
-                            aria-pressed="false">Following</button>
+                <div class="stage-wrap" id="stage-wrap" data-has-result="false">
+                    <div class="stage-area" id="stage-area" data-kind="phone">
+                        <div class="device" id="device" data-kind="phone" data-state="idle" style="--r:.4622">
+                            <div class="screen">
+                                <img class="shot" id="shot" alt="">
+                                <canvas class="plasma" id="plasma" aria-hidden="true"></canvas>
+                                <div class="busy" role="status" aria-live="polite">
+                                    <span class="busy-time dm" id="busy-time" aria-hidden="true">0.0</span>
+                                    <span class="busy-text" id="busy-text"></span>
+                                </div>
+                                <span class="sample-tag" id="sample-tag">Sample</span>
+                                <div class="lock-ov" aria-hidden="true"><span class="lock-date"></span><span class="lock-time"></span></div>
+                            </div>
+                            <i class="island" aria-hidden="true"></i>
+                        </div>
                     </div>
-                    <div class="seg" role="group" aria-label="Sort" id="sort-seg">
-                        <button type="button" data-action="sort" data-sort="new" aria-pressed="true">New</button>
-                        <button type="button" data-action="sort" data-sort="top" aria-pressed="false">Popular</button>
+
+                    <p class="dims dm" id="dims" aria-hidden="true">1284 × 2778</p>
+
+                    <div class="variants" id="variants" hidden role="group" aria-label="Variations"></div>
+
+                    <div class="result-actions" id="result-actions" hidden role="toolbar" aria-label="Wallpaper actions">
+                        <button type="button" class="icon-btn glass" data-action="result-fav" aria-pressed="false" aria-label="Favorite" title="Favorite">
+                            <svg class="i" aria-hidden="true"><use href="#i-star" /></svg>
+                        </button>
+                        <button type="button" class="icon-btn glass" data-action="result-share" aria-label="Share" title="Share">
+                            <svg class="i" aria-hidden="true"><use href="#i-share-2" /></svg>
+                        </button>
+                        <button type="button" class="btn btn-primary btn-sm" data-action="result-download">
+                            <svg class="i" aria-hidden="true"><use href="#i-download" /></svg>Download
+                        </button>
+                        <button type="button" class="icon-btn glass" data-action="result-open" aria-label="Open full screen" title="Open full screen">
+                            <svg class="i" aria-hidden="true"><use href="#i-expand" /></svg>
+                        </button>
+                        <button type="button" class="icon-btn glass" data-action="result-clear" aria-label="Dismiss" title="Dismiss">
+                            <svg class="i" aria-hidden="true"><use href="#i-x" /></svg>
+                        </button>
                     </div>
                 </div>
 
-                <div class="creator-pill" id="creator-pill" hidden>
-                    <span id="creator-name"></span>
-                    <button type="button" data-action="clear-creator" aria-label="Show everyone again">
-                        <svg class="i" aria-hidden="true"><use href="#i-x" /></svg>
-                    </button>
-                </div>
+                <div class="composer" id="composer">
+                    <div class="chips" role="group" aria-label="Creation settings">
+                        <button type="button" class="chip" data-action="sheet" data-sheet="subject">
+                            <span class="chip-k">Subject</span><span class="chip-v" id="v-subject"></span>
+                            <svg class="i" aria-hidden="true"><use href="#i-chevron-down" /></svg>
+                        </button>
+                        <button type="button" class="chip" data-action="sheet" data-sheet="style">
+                            <span class="chip-k">Style</span><span class="chip-v" id="v-style"></span>
+                            <svg class="i" aria-hidden="true"><use href="#i-chevron-down" /></svg>
+                        </button>
+                        <button type="button" class="chip" data-action="sheet" data-sheet="format">
+                            <span class="chip-k">Format</span><span class="chip-v" id="v-format"></span>
+                            <svg class="i" aria-hidden="true"><use href="#i-chevron-down" /></svg>
+                        </button>
+                        <button type="button" class="chip" data-action="sheet" data-sheet="tune" aria-label="Tune: model, variations, quality, seed, tone">
+                            <svg class="i" aria-hidden="true"><use href="#i-sliders-horizontal" /></svg>
+                            <span class="chip-v" id="v-tune"></span>
+                        </button>
+                    </div>
 
-                <div class="grid" id="community-grid" aria-live="polite"></div>
-                <div class="sentinel" id="community-sentinel" aria-hidden="true"></div>
-            </main>
-        </div>
+                    <div class="prompt-note" id="prompt-note" hidden>
+                        <span></span>
+                        <button type="button" class="link-btn" data-action="prompt-reset">Reset</button>
+                    </div>
 
-        <!-- ============================== COLLECTION ============================== -->
-        <aside id="collection" class="collection" aria-label="Your collection">
-            <header class="col-head">
-                <div>
-                    <p class="eyebrow">Collection</p>
-                    <p class="col-count dm" id="col-count">00</p>
+                    <div class="prompt-row">
+                        <button type="button" class="icon-btn" data-action="surprise" aria-label="Surprise me (R)" title="Surprise me (R)">
+                            <svg class="i" aria-hidden="true"><use href="#i-dice-5" /></svg>
+                        </button>
+                        <label class="sr-only" for="prompt">Describe your wallpaper</label>
+                        <textarea id="prompt" rows="1" spellcheck="false" maxlength="600"
+                            placeholder="Describe a subject — or tap Create"></textarea>
+                        <button type="button" class="create-btn" id="create-btn" data-action="generate" data-busy="false">
+                            <svg class="i i-go" aria-hidden="true"><use href="#i-sparkles" /></svg>
+                            <svg class="i i-stop" aria-hidden="true"><use href="#i-square" /></svg>
+                            <span id="create-label">Create</span>
+                        </button>
+                    </div>
                 </div>
-                <div class="row">
-                    <button type="button" class="icon-btn" data-action="clear-history" aria-label="Clear history">
-                        <svg class="i" aria-hidden="true"><use href="#i-trash-2" /></svg>
-                    </button>
-                    <button type="button" class="icon-btn only-overlay" data-action="close-collection"
-                        aria-label="Close collection">
-                        <svg class="i" aria-hidden="true"><use href="#i-x" /></svg>
-                    </button>
+            </section>
+
+            <!-- ================================ LIBRARY ================================ -->
+            <section class="view" id="view-library" data-active="false" inert aria-label="Library">
+                <div class="lib-scroll" id="lib-scroll">
+                    <header class="lib-head">
+                        <div>
+                            <p class="eyebrow">Library</p>
+                            <p class="lib-count dm" id="lib-count">00</p>
+                        </div>
+                        <div class="top-actions">
+                            <button type="button" class="credits-chip" data-action="account" hidden title="Credits left today">
+                                <svg class="i" aria-hidden="true"><use href="#i-zap" /></svg><span class="credits-num dm">--</span>
+                            </button>
+                            <button type="button" class="icon-btn avatar-btn only-mobile" data-action="account" aria-label="Sign in">
+                                <svg class="i" aria-hidden="true"><use href="#i-user" /></svg>
+                            </button>
+                        </div>
+                    </header>
+
+                    <div class="seg" id="lib-filter" role="group" aria-label="Filter">
+                        <button type="button" data-action="lib-filter" data-filter="all" aria-pressed="true">All</button>
+                        <button type="button" data-action="lib-filter" data-filter="favorites" aria-pressed="false">Favorites</button>
+                        <button type="button" data-action="lib-filter" data-filter="public" aria-pressed="false" hidden>Public</button>
+                    </div>
+
+                    <div class="banner" id="lib-banner" hidden>
+                        <svg class="i" aria-hidden="true"><use href="#i-cloud-upload" /></svg>
+                        <span>Saved on this device only. <button type="button" class="link-btn" data-action="account">Sign in</button> to sync everywhere.</span>
+                    </div>
+
+                    <div class="lib-grid" id="lib-grid"></div>
+
+                    <div class="empty" id="lib-empty" hidden>
+                        <svg class="i" aria-hidden="true"><use href="#i-image" /></svg>
+                        <strong id="lib-empty-title">Your library is empty</strong>
+                        <span id="lib-empty-text"></span>
+                        <button type="button" class="btn btn-primary" data-action="nav" data-to="create">
+                            <svg class="i" aria-hidden="true"><use href="#i-wand-sparkles" /></svg>Create a wallpaper
+                        </button>
+                    </div>
+                    <div class="sentinel" id="lib-sentinel" aria-hidden="true"></div>
                 </div>
-            </header>
-            <div class="seg" role="group" aria-label="Filter collection">
-                <button type="button" data-action="history-filter" data-filter="all" aria-pressed="true">All</button>
-                <button type="button" data-action="history-filter" data-filter="favorites"
-                    aria-pressed="false">Favorites</button>
-            </div>
-            <div class="col-list" id="collection-list"></div>
-        </aside>
+            </section>
+        </main>
+
+        <!-- Mobile dock -->
+        <nav class="dock" aria-label="Primary mobile">
+            <button type="button" data-action="nav" data-to="explore">
+                <svg class="i" aria-hidden="true"><use href="#i-compass" /></svg><span>Explore</span>
+            </button>
+            <button type="button" class="dock-create" data-action="nav" data-to="create" aria-current="page">
+                <svg class="i" aria-hidden="true"><use href="#i-wand-sparkles" /></svg><span>Create</span>
+            </button>
+            <button type="button" data-action="nav" data-to="library">
+                <svg class="i" aria-hidden="true"><use href="#i-layout-grid" /></svg><span>Library</span>
+            </button>
+        </nav>
     </div>
-    <div class="scrim" id="scrim" data-action="close-collection" hidden></div>
-
-    <!-- Mobile dock -->
-    <nav class="dock" aria-label="Primary mobile">
-        <button type="button" data-action="view" data-view="create" aria-current="page">
-            <svg class="i" aria-hidden="true"><use href="#i-wand-sparkles" /></svg><span>Create</span>
-        </button>
-        <button type="button" data-action="view" data-view="community">
-            <svg class="i" aria-hidden="true"><use href="#i-compass" /></svg><span>Explore</span>
-        </button>
-        <button type="button" data-action="collection">
-            <svg class="i" aria-hidden="true"><use href="#i-layout-grid" /></svg><span>Collection</span>
-        </button>
-        <button type="button" data-action="account">
-            <svg class="i" aria-hidden="true"><use href="#i-user" /></svg><span>Account</span>
-        </button>
-    </nav>
 
     <div id="toast" class="toast" role="status" aria-live="polite"></div>
 
-    <!-- ============================== VIEWER ============================== -->
-    <dialog id="dlg-viewer" class="viewer" aria-label="Wallpaper viewer">
-        <div class="viewer-top">
-            <button type="button" class="icon-btn glass" data-action="close-dialog" aria-label="Close">
-                <svg class="i" aria-hidden="true"><use href="#i-x" /></svg>
-            </button>
-            <div class="viewer-tools">
-                <button type="button" class="icon-btn glass" data-action="lock-preview" aria-pressed="false"
-                    aria-label="Preview as lock screen" title="Lock screen preview">
+    <!-- ================================ VIEWER ================================ -->
+    <dialog id="viewer" class="viewer" aria-label="Wallpaper viewer" data-modal="strict">
+        <div class="pager-host" data-pager-host>
+            <div class="pager" id="viewer-pager" tabindex="0" aria-label="Wallpapers"></div>
+            <header class="topbar viewer-top">
+                <button type="button" class="icon-btn glass" data-action="close-dialog" aria-label="Close">
+                    <svg class="i" aria-hidden="true"><use href="#i-x" /></svg>
+                </button>
+                <span class="counter dm" id="viewer-count" aria-live="polite"></span>
+                <button type="button" class="icon-btn glass" data-action="toggle-lock" aria-pressed="true"
+                    aria-label="Lock-screen preview" title="Lock-screen preview">
                     <svg class="i" aria-hidden="true"><use href="#i-lock" /></svg>
                 </button>
-                <button type="button" class="icon-btn glass" data-action="palette" aria-label="Extract color palette"
-                    title="Color palette">
-                    <svg class="i" aria-hidden="true"><use href="#i-palette" /></svg>
+            </header>
+            <div class="pager-nav">
+                <button type="button" class="icon-btn glass" data-action="viewer-prev" aria-label="Previous">
+                    <svg class="i" aria-hidden="true"><use href="#i-chevron-up" /></svg>
                 </button>
-                <div class="menu-wrap">
-                    <button type="button" class="icon-btn glass" data-action="share-menu" aria-haspopup="menu"
-                        aria-expanded="false" aria-controls="share-menu" aria-label="Share">
-                        <svg class="i" aria-hidden="true"><use href="#i-share-2" /></svg>
-                    </button>
-                    <div class="menu" id="share-menu" role="menu" hidden>
-                        <button type="button" role="menuitem" data-action="download-viewer">
-                            <svg class="i" aria-hidden="true"><use href="#i-download" /></svg>Download
-                        </button>
-                        <button type="button" role="menuitem" data-action="copy-link">
-                            <svg class="i" aria-hidden="true"><use href="#i-link" /></svg>Copy link
-                        </button>
-                        <button type="button" role="menuitem" data-action="share-native">
-                            <svg class="i" aria-hidden="true"><use href="#i-share-2" /></svg>Share…
-                        </button>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <div class="viewer-stage">
-            <div class="frame">
-                <img id="viewer-img" alt="Generated wallpaper">
-                <div class="lock" id="lock-overlay" hidden aria-hidden="true">
-                    <div class="lock-date" id="lock-date"></div>
-                    <div class="lock-time dm" id="lock-time"></div>
-                </div>
-            </div>
-        </div>
-
-        <div class="viewer-bottom">
-            <div class="palette" id="palette" aria-live="polite"></div>
-            <p class="viewer-meta" id="viewer-meta"></p>
-            <div class="viewer-actions">
-                <button type="button" class="btn btn-primary grow" data-action="download-viewer">
-                    <svg class="i" aria-hidden="true"><use href="#i-download" /></svg>Download
-                </button>
-                <button type="button" class="btn btn-glass" id="public-btn" data-action="toggle-public"
-                    aria-pressed="false">
-                    <svg class="i" aria-hidden="true"><use href="#i-globe" /></svg><span>Make public</span>
-                </button>
-                <button type="button" class="btn btn-glass" data-action="remix-viewer">
-                    <svg class="i" aria-hidden="true"><use href="#i-shuffle" /></svg><span>Remix</span>
+                <button type="button" class="icon-btn glass" data-action="viewer-next" aria-label="Next">
+                    <svg class="i" aria-hidden="true"><use href="#i-chevron-down" /></svg>
                 </button>
             </div>
         </div>
     </dialog>
 
-    <!-- ============================== ACCOUNT ============================== -->
-    <dialog id="dlg-auth" class="sheet" aria-labelledby="auth-title">
+    <!-- ================================ SHEETS ================================ -->
+    <dialog id="sheet-subject" class="sheet sheet-wide" aria-labelledby="t-subject">
         <header class="sheet-head">
-            <h2 id="auth-title">Account</h2>
-            <button type="button" class="icon-btn" data-action="close-dialog" aria-label="Close">
-                <svg class="i" aria-hidden="true"><use href="#i-x" /></svg>
-            </button>
+            <div><h2 id="t-subject">Subject</h2><p class="hint">What the wallpaper is of. Or type your own in the box.</p></div>
+            <button type="button" class="icon-btn" data-action="close-dialog" aria-label="Close"><svg class="i" aria-hidden="true"><use href="#i-x" /></svg></button>
         </header>
+        <div class="sheet-body"><div class="pick-grid" id="grid-subject"></div></div>
+    </dialog>
 
+    <dialog id="sheet-style" class="sheet sheet-wide" aria-labelledby="t-style">
+        <header class="sheet-head">
+            <div><h2 id="t-style">Style</h2><p class="hint">How it’s rendered.</p></div>
+            <button type="button" class="icon-btn" data-action="close-dialog" aria-label="Close"><svg class="i" aria-hidden="true"><use href="#i-x" /></svg></button>
+        </header>
+        <div class="sheet-body"><div class="pick-grid" id="grid-style"></div></div>
+    </dialog>
+
+    <dialog id="sheet-format" class="sheet" aria-labelledby="t-format">
+        <header class="sheet-head">
+            <div><h2 id="t-format">Format</h2><p class="hint">The preview takes the shape of your device.</p></div>
+            <button type="button" class="icon-btn" data-action="close-dialog" aria-label="Close"><svg class="i" aria-hidden="true"><use href="#i-x" /></svg></button>
+        </header>
+        <div class="sheet-body"><div class="rows" id="list-format"></div></div>
+    </dialog>
+
+    <dialog id="sheet-tune" class="sheet" aria-labelledby="t-tune">
+        <header class="sheet-head">
+            <h2 id="t-tune">Tune</h2>
+            <div class="row">
+                <button type="button" class="link-btn" data-action="tune-reset">Reset</button>
+                <button type="button" class="icon-btn" data-action="close-dialog" aria-label="Close"><svg class="i" aria-hidden="true"><use href="#i-x" /></svg></button>
+            </div>
+        </header>
+        <div class="sheet-body">
+            <div class="field"><span class="label">Model</span><div class="rows" id="model-list"></div></div>
+            <div class="field">
+                <span class="label">Variations</span>
+                <div class="seg seg-full" id="batch-seg" role="group" aria-label="Variations">
+                    <button type="button" data-action="set-batch" data-batch="1" aria-pressed="true">Single</button>
+                    <button type="button" data-action="set-batch" data-batch="4" aria-pressed="false">4 variations</button>
+                </div>
+                <p class="hint">Each image costs 10 credits when signed in.</p>
+            </div>
+            <div class="field">
+                <label class="label" for="steps"><span>Quality steps</span> <b class="dm" id="steps-val">4</b></label>
+                <input type="range" id="steps" min="1" max="4" step="1" value="4">
+                <p class="hint">More steps add detail but take longer.</p>
+            </div>
+            <div class="field">
+                <label class="label" for="seed">Seed</label>
+                <div class="row">
+                    <input type="number" id="seed" inputmode="numeric" min="0" step="1" placeholder="Random each time">
+                    <button type="button" class="icon-btn" data-action="seed-random" aria-label="Pick a random seed"><svg class="i" aria-hidden="true"><use href="#i-shuffle" /></svg></button>
+                    <button type="button" class="btn btn-glass btn-sm" data-action="seed-clear">Clear</button>
+                </div>
+                <p class="hint">Reuse a seed to reproduce a result.</p>
+            </div>
+            <div class="field"><span class="label">Color tone</span><div class="tones" id="tones" role="group" aria-label="Color tone"></div></div>
+            <div class="field">
+                <label class="label" for="final-prompt">Final prompt</label>
+                <textarea id="final-prompt" readonly rows="4"></textarea>
+                <button type="button" class="btn btn-glass btn-sm" data-action="copy-prompt"><svg class="i" aria-hidden="true"><use href="#i-copy" /></svg>Copy prompt</button>
+            </div>
+        </div>
+    </dialog>
+
+    <dialog id="dlg-search" class="sheet sheet-sm" aria-labelledby="t-search">
+        <form id="form-search" class="sheet-body" role="search">
+            <h2 id="t-search" class="sr-only">Search</h2>
+            <label class="search">
+                <svg class="i" aria-hidden="true"><use href="#i-search" /></svg>
+                <input id="search-input" type="search" placeholder="Search prompts, genres, styles" autocomplete="off" aria-label="Search community">
+            </label>
+            <div class="row row-end">
+                <button type="button" class="btn btn-glass" data-action="close-dialog">Cancel</button>
+                <button type="submit" class="btn btn-primary">Search</button>
+            </div>
+        </form>
+    </dialog>
+
+    <!-- ================================ ACCOUNT ================================ -->
+    <dialog id="dlg-account" class="sheet" aria-labelledby="account-title">
+        <header class="sheet-head">
+            <h2 id="account-title">Welcome</h2>
+            <button type="button" class="icon-btn" data-action="close-dialog" aria-label="Close"><svg class="i" aria-hidden="true"><use href="#i-x" /></svg></button>
+        </header>
         <div class="sheet-body">
             <div id="auth-guest">
                 <div class="seg seg-full" role="tablist" aria-label="Sign in or sign up">
-                    <button type="button" role="tab" data-action="auth-tab" data-tab="signin"
-                        aria-selected="true">Sign in</button>
-                    <button type="button" role="tab" data-action="auth-tab" data-tab="signup"
-                        aria-selected="false">Create account</button>
+                    <button type="button" role="tab" data-action="auth-tab" data-tab="signin" aria-selected="true">Sign in</button>
+                    <button type="button" role="tab" data-action="auth-tab" data-tab="signup" aria-selected="false">Create account</button>
                 </div>
-
                 <form class="form" data-form="signin" id="form-signin">
-                    <p class="hint">Sync your collection across devices and share with the community.</p>
-                    <label class="field"><span>Email</span>
-                        <input type="email" name="email" autocomplete="email" required placeholder="you@example.com">
-                    </label>
-                    <label class="field"><span>Password</span>
-                        <input type="password" name="password" autocomplete="current-password" required
-                            minlength="6" placeholder="••••••••">
-                    </label>
+                    <p class="hint">Sync your library across devices, get daily credits and share with the community.</p>
+                    <label class="field"><span>Email</span><input type="email" name="email" autocomplete="email" required placeholder="you@example.com"></label>
+                    <label class="field"><span>Password</span><input type="password" name="password" autocomplete="current-password" required minlength="6" placeholder="••••••••"></label>
                     <p class="form-error" role="alert"></p>
                     <button type="submit" class="btn btn-primary btn-lg">Sign in</button>
                 </form>
-
                 <form class="form" data-form="signup" id="form-signup" hidden>
                     <p class="hint">Join the community and get daily credits.</p>
-                    <label class="field"><span>Username</span>
-                        <input type="text" name="username" autocomplete="username" required minlength="2"
-                            maxlength="24" placeholder="pixelwizard">
-                    </label>
-                    <label class="field"><span>Email</span>
-                        <input type="email" name="email" autocomplete="email" required placeholder="you@example.com">
-                    </label>
-                    <label class="field"><span>Password</span>
-                        <input type="password" name="password" autocomplete="new-password" required minlength="6"
-                            placeholder="At least 6 characters">
-                    </label>
+                    <label class="field"><span>Username</span><input type="text" name="username" autocomplete="username" required minlength="2" maxlength="24" placeholder="pixelwizard"></label>
+                    <label class="field"><span>Email</span><input type="email" name="email" autocomplete="email" required placeholder="you@example.com"></label>
+                    <label class="field"><span>Password</span><input type="password" name="password" autocomplete="new-password" required minlength="6" placeholder="At least 6 characters"></label>
                     <p class="form-error" role="alert"></p>
                     <button type="submit" class="btn btn-primary btn-lg">Create account</button>
                 </form>
@@ -429,89 +441,33 @@
                     <label class="avatar-edit" title="Change photo">
                         <span id="profile-avatar"></span>
                         <span class="avatar-cam"><svg class="i" aria-hidden="true"><use href="#i-camera" /></svg></span>
-                        <input type="file" id="avatar-upload" accept="image/*" class="sr-only"
-                            aria-label="Upload profile photo">
+                        <input type="file" id="avatar-upload" accept="image/*" class="sr-only" aria-label="Upload profile photo">
                     </label>
                     <div>
                         <p class="profile-email" id="profile-email"></p>
-                        <p class="profile-credits"><span class="dm" id="profile-credits">--</span> / <span
-                                id="profile-credits-max">100</span> credits today</p>
+                        <p class="profile-credits"><span class="dm" id="profile-credits">--</span> / <span id="profile-credits-max">100</span> credits today</p>
                     </div>
                 </div>
                 <form class="form" data-form="profile">
-                    <label class="field"><span>Username</span>
-                        <input type="text" name="username" id="profile-username" autocomplete="nickname" required
-                            minlength="2" maxlength="24">
-                    </label>
-                    <label class="field"><span>Avatar URL <em>(optional)</em></span>
-                        <input type="url" name="avatar" id="profile-avatar-url" placeholder="https://…">
-                    </label>
+                    <label class="field"><span>Username</span><input type="text" name="username" id="profile-username" autocomplete="nickname" required minlength="2" maxlength="24"></label>
+                    <label class="field"><span>Avatar URL <em>(optional)</em></span><input type="url" name="avatar" id="profile-avatar-url" placeholder="https://…"></label>
                     <p class="form-error" role="alert"></p>
                     <button type="submit" class="btn btn-primary btn-lg">Save changes</button>
                 </form>
-                <button type="button" class="btn btn-glass btn-block" data-action="sign-out">
-                    <svg class="i" aria-hidden="true"><use href="#i-log-out" /></svg>Sign out
-                </button>
+                <button type="button" class="btn btn-glass btn-block" data-action="sign-out"><svg class="i" aria-hidden="true"><use href="#i-log-out" /></svg>Sign out</button>
+            </div>
+
+            <div class="field prefs">
+                <span class="label">App</span>
+                <div id="install-row" hidden>
+                    <button type="button" class="btn btn-glass btn-block" data-action="install-app"><svg class="i" aria-hidden="true"><use href="#i-download" /></svg>Install app</button>
+                </div>
+                <button type="button" class="btn btn-danger btn-block" data-action="clear-data">Clear data on this device</button>
+                <p class="hint">Keys: <kbd>1</kbd> <kbd>2</kbd> <kbd>3</kbd> switch screens · <kbd>R</kbd> surprise · <kbd>⌘/Ctrl</kbd>+<kbd>Enter</kbd> create · <kbd>↑</kbd><kbd>↓</kbd> browse.</p>
             </div>
         </div>
     </dialog>
 
-    <!-- ============================== SETTINGS ============================== -->
-    <dialog id="dlg-settings" class="sheet" aria-labelledby="settings-title">
-        <header class="sheet-head">
-            <h2 id="settings-title">Settings</h2>
-            <button type="button" class="icon-btn" data-action="close-dialog" aria-label="Close">
-                <svg class="i" aria-hidden="true"><use href="#i-x" /></svg>
-            </button>
-        </header>
-        <div class="sheet-body">
-            <div class="field">
-                <span>Appearance</span>
-                <div class="seg seg-full" role="group" aria-label="Theme">
-                    <button type="button" data-action="set-theme" data-theme="dark" aria-pressed="true">Dark</button>
-                    <button type="button" data-action="set-theme" data-theme="light" aria-pressed="false">Light</button>
-                </div>
-            </div>
-
-            <div class="field">
-                <label for="steps"><span>Quality steps</span> <b class="dm" id="steps-val">4</b></label>
-                <input type="range" id="steps" min="1" max="4" step="1" value="4">
-                <p class="hint">More steps add detail but take longer.</p>
-            </div>
-
-            <div class="field">
-                <label for="seed"><span>Seed</span></label>
-                <div class="row">
-                    <input type="number" id="seed" inputmode="numeric" min="0" step="1" placeholder="Random each time">
-                    <button type="button" class="icon-btn" data-action="seed-random" aria-label="Pick a random seed">
-                        <svg class="i" aria-hidden="true"><use href="#i-shuffle" /></svg>
-                    </button>
-                    <button type="button" class="btn btn-glass btn-sm" data-action="seed-clear">Clear</button>
-                </div>
-                <p class="hint">Reuse a seed to reproduce a result.</p>
-            </div>
-
-            <div class="field">
-                <span>Shortcuts</span>
-                <dl class="keys">
-                    <dt><kbd>R</kbd></dt><dd>Surprise me</dd>
-                    <dt><kbd>⌘/Ctrl</kbd> <kbd>Enter</kbd></dt><dd>Create wallpaper</dd>
-                    <dt><kbd>H</kbd></dt><dd>Collection</dd>
-                    <dt><kbd>S</kbd></dt><dd>Settings</dd>
-                    <dt><kbd>←</kbd> <kbd>→</kbd></dt><dd>Move within a genre / style row</dd>
-                </dl>
-            </div>
-
-            <div class="field">
-                <span>Storage</span>
-                <button type="button" class="btn btn-danger btn-block" data-action="clear-data">Clear local history &
-                    favorites</button>
-                <p class="hint">Cloud-synced wallpapers are not affected.</p>
-            </div>
-        </div>
-    </dialog>
-
-    <!-- ============================== CONFIRM ============================== -->
     <dialog id="dlg-confirm" class="sheet sheet-sm" aria-labelledby="confirm-title">
         <form method="dialog" class="sheet-body">
             <h2 id="confirm-title">Are you sure?</h2>

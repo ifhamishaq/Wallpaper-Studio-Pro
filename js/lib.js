@@ -100,3 +100,52 @@ export function avatarHtml(name, url, cls = '') {
     for (const ch of n) h = (h * 31 + ch.charCodeAt(0)) % 360;
     return `<span class="av ${cls}" style="--h:${h}" aria-hidden="true">${esc(n[0].toUpperCase())}</span>`;
 }
+
+export const fmtCount = (n) => (n >= 1000 ? `${(n / 1000).toFixed(1).replace('.0', '')}k` : String(n || 0));
+
+export const idle = (fn) => ('requestIdleCallback' in window ? requestIdleCallback(fn, { timeout: 1500 }) : setTimeout(fn, 200));
+
+export async function copyText(text, okMessage = 'Copied') {
+    try {
+        await navigator.clipboard.writeText(text);
+        toast(okMessage, 'success', 1800);
+    } catch {
+        toast('Couldn’t copy', 'error');
+    }
+}
+
+/** Saves an image. If the host blocks cross-origin reads, opens it in a new tab instead. */
+export async function downloadUrl(url, baseName) {
+    const safe = safeUrl(url);
+    if (!safe) return;
+    try {
+        const res = await fetch(safe, { mode: 'cors' });
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        const blob = await res.blob();
+        const ext = (blob.type.split('/')[1] || 'png').replace('jpeg', 'jpg').replace(/\+.*/, '');
+        const a = document.createElement('a');
+        a.href = URL.createObjectURL(blob);
+        a.download = `${baseName}.${ext}`;
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        setTimeout(() => URL.revokeObjectURL(a.href), 2000);
+        toast('Saved to your downloads', 'success', 2000);
+    } catch {
+        window.open(safe, '_blank', 'noopener');
+        toast('Opened in a new tab — long-press or right-click to save', 'info', 4500);
+    }
+}
+
+/**
+ * Soft blurred backdrop without any blur filter: draw the image into a tiny canvas and let
+ * CSS scale it up with smoothing. Cross-origin images taint the canvas but still display.
+ */
+export function paintAmbient(img, canvas) {
+    try {
+        canvas.getContext('2d').drawImage(img, 0, 0, canvas.width, canvas.height);
+        canvas.classList.add('ready');
+    } catch { /* decode error: leave the plain backdrop */ }
+}
+
+export const itemName = (it) => `wallpaper-${slug(it.genre) || 'ai'}-${slug(it.style) || 'art'}-${it.seed ?? Date.now()}`;

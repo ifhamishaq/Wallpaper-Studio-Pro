@@ -1,4 +1,4 @@
-// Supabase access layer.
+// Supabase access layer (cloud).
 // The SDK (~120KB) is imported lazily: visitors who never sign in or open the
 // community feed never download it.
 
@@ -130,6 +130,29 @@ export const db = {
 
         const rows = unwrap(await query.range(offset, offset + limit - 1));
         return decorate(c, rows, userId);
+    },
+
+    /** One public wallpaper by id (deep links). */
+    async byId(id, userId = null) {
+        const c = await client();
+        const row = unwrap(await c.from('wallpapers').select(FEED_COLUMNS).eq('id', id).eq('is_public', true).maybeSingle());
+        return row ? (await decorate(c, [row], userId))[0] : null;
+    },
+
+    /** The signed-in user's own wallpapers (public and private). */
+    async mine(userId, { offset = 0, limit = 30 } = {}) {
+        const c = await client();
+        return unwrap(await c.from('wallpapers')
+            .select('id,url,prompt,genre,style,seed,created_at,is_public')
+            .eq('user_id', userId)
+            .order('created_at', { ascending: false })
+            .range(offset, offset + limit - 1));
+    },
+
+    async remove(id, userId) {
+        const c = await client();
+        const { error } = await c.from('wallpapers').delete().eq('id', id).eq('user_id', userId);
+        if (error) throw error;
     },
 
     async setLike(wallpaperId, userId, liked) {
