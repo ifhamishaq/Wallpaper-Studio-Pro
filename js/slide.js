@@ -72,7 +72,15 @@ document.addEventListener('load', (e) => {
     const slide = img.closest('.slide');
     img.classList.add('ld');
     if (!slide) return;
-    slide.dataset.tall = img.naturalHeight / img.naturalWidth > 1.3 ? '1' : '0';
+    // If the model returned a different shape than the item asked for, show it cropped to that shape.
+    const it = registry.get(img.closest('.slide')?.querySelector('[data-k]')?.dataset.k);
+    const want = it?.w && it?.h ? it.w / it.h : 0;
+    const have = img.naturalWidth / img.naturalHeight;
+    if (want && Math.abs(have / want - 1) > 0.04) {
+        img.style.aspectRatio = String(want);
+        img.classList.add('recrop');
+    }
+    slide.dataset.tall = (want || have) < 0.77 ? '1' : '0';
     paintAmbient(img, slide.querySelector('.slide-bg canvas'));
     tickLock();
 }, true);

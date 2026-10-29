@@ -115,13 +115,14 @@ export async function copyText(text, okMessage = 'Copied') {
 }
 
 /** Saves an image. If the host blocks cross-origin reads, opens it in a new tab instead. */
-export async function downloadUrl(url, baseName) {
+export async function downloadUrl(url, baseName, ratio = 0) {
     const safe = safeUrl(url);
     if (!safe) return;
     try {
         const res = await fetch(safe, { mode: 'cors' });
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
-        const blob = await res.blob();
+        let blob = await res.blob();
+        if (ratio) blob = await cropToRatio(blob, ratio);
         const ext = (blob.type.split('/')[1] || 'png').replace('jpeg', 'jpg').replace(/\+.*/, '');
         const a = document.createElement('a');
         a.href = URL.createObjectURL(blob);
@@ -135,6 +136,25 @@ export async function downloadUrl(url, baseName) {
         window.open(safe, '_blank', 'noopener');
         toast('Opened in a new tab — long-press or right-click to save', 'info', 4500);
     }
+}
+
+/**
+ * If a model returned a different shape than requested (e.g. a square for a phone), center-crop
+ * it to the wanted aspect ratio so the saved file is the right shape. No-op when close enough.
+ */
+export async function cropToRatio(blob, ratio) {
+    try {
+        const bmp = await createImageBitmap(blob);
+        const have = bmp.width / bmp.height;
+        if (Math.abs(have / ratio - 1) < 0.04) { bmp.close?.(); return blob; }
+        let w = bmp.width, h = bmp.height;
+        if (have > ratio) w = Math.round(h * ratio); else h = Math.round(w / ratio);
+        const c = document.createElement('canvas');
+        c.width = w; c.height = h;
+        c.getContext('2d').drawImage(bmp, (bmp.width - w) / 2, (bmp.height - h) / 2, w, h, 0, 0, w, h);
+        bmp.close?.();
+        return await new Promise((resolve) => c.toBlob((b) => resolve(b || blob), 'image/png'));
+    } catch { return blob; }
 }
 
 /**

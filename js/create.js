@@ -449,7 +449,16 @@ export function init() {
         renderChips();
     });
 
-    E.shot.addEventListener('load', () => E.shot.classList.add('ld'));
+    E.shot.addEventListener('load', () => {
+        E.shot.classList.add('ld');
+        const it = results[active];
+        if (!it || E.device.dataset.state !== 'done') return;
+        const have = E.shot.naturalWidth / E.shot.naturalHeight, want = it.w / it.h;
+        if (Math.abs(have / want - 1) > 0.04 && !showResult.warned) {
+            showResult.warned = true;
+            toast('The model returned a different shape — it’s cropped to fit your device.', 'info', 4500);
+        }
+    });
 
     // keep the "final prompt" field live while the tune sheet is open
     $('#sheet-tune').addEventListener('input', () => { E.finalPrompt.value = effectivePrompt(); });

@@ -320,6 +320,7 @@ html[data-lock='on'] .slide[data-tall='1'] .lock-ov { display: flex; }
 .frame { position: relative; display: grid; }
 .slide-img { max-width: 100cqw; max-height: 100cqh; width: auto; height: auto; opacity: 0; transition: opacity .5s ease; background: #0a0a0e; }
 .slide-img.ld { opacity: 1; }
+.slide-img.recrop { object-fit: cover; }
 .slide.err .slide-img { display: none; }
 .slide.err .slide-media::after { content: 'Image unavailable'; color: var(--faint); font-size: 14px; }
 

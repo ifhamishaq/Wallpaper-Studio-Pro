@@ -29,7 +29,7 @@ export function toggleFavorite(item) {
     return on;
 }
 
-export const download = (item) => downloadUrl(item.url, itemName(item));
+export const download = (item) => downloadUrl(item.url, itemName(item), item.w && item.h ? item.w / item.h : 0);
 
 export async function share(item) {
     const url = item.cloudId && (item.isPublic || item.author_name) ? `${location.origin}/#w=${item.cloudId}` : item.url;

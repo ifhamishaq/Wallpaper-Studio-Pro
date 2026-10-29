@@ -12,6 +12,10 @@ const BASE = "https://gateway.pixazo.ai";
 const MODELS = {
     "flux-schnell": {
         url: `${BASE}/flux-1-schnell/v1/getData`,
+        // Flux renders sizes up to ~1440px per side in multiples of 32. Anything bigger (a 1284x2778
+        // phone request is 3.6 megapixels) can be ignored upstream, which yields a square default.
+        // We always send the same aspect ratio at a size the model supports.
+        limits: { min: 256, max: 1440, step: 32 },
         body: (i) => ({
             prompt: i.prompt,
             width: i.width,
@@ -45,10 +49,15 @@ export default async (request) => {
 
         // Only known fields, clamped to sane ranges (this endpoint is public).
         const seed = Number(input.seed);
+        const fitted = fitSize(
+            clampInt(input.width, 64, 8192, 1024),
+            clampInt(input.height, 64, 8192, 1024),
+            model.limits
+        );
         const clean = {
             prompt: input.prompt.slice(0, 1500),
-            width: clampInt(input.width, 256, 4096, 1024),
-            height: clampInt(input.height, 256, 4096, 1024),
+            width: fitted.width,
+            height: fitted.height,
             steps: input.steps ?? input.num_steps,
             seed: Number.isFinite(seed) ? Math.floor(seed) : Math.floor(Math.random() * 1000000)
         };
@@ -78,7 +87,7 @@ export default async (request) => {
                 if (response.ok) {
                     const data = await response.json();
                     const output = model.extract(data);
-                    if (typeof output === "string" && output) return json({ output }, 200);
+                    if (typeof output === "string" && output) return json({ output, width: clean.width, height: clean.height }, 200);
                     lastError = "Model returned no image";
                     lastStatus = 502;
                     continue;
@@ -116,6 +125,17 @@ function getApiKeys() {
         if (key) keys.push(key);
     }
     return keys;
+}
+
+/** Scales (w, h) into the model's supported range, keeping the aspect ratio, snapped to `step`. */
+function fitSize(w, h, { min = 256, max = 1440, step = 32 } = {}) {
+    const down = Math.min(1, max / Math.max(w, h));
+    let W = w * down;
+    let H = h * down;
+    const small = Math.min(W, H);
+    if (small < min) { W *= min / small; H *= min / small; }
+    const snap = (v) => Math.max(min, Math.min(max, Math.round(v / step) * step));
+    return { width: snap(W), height: snap(H) };
 }
 
 function clampInt(value, min, max, fallback) {
