@@ -1,12 +1,12 @@
 // Service worker: installable app + offline shell.
 // Strategy is network-first for our own files (a deploy is visible on the very next load),
 // falling back to the cache when offline. API calls and third-party hosts are never cached.
-const CACHE = 'wsp-v1';
+const CACHE = 'wsp-v2';
 const SHELL = [
     '/', '/index.html', '/style.css', '/manifest.webmanifest',
     '/js/main.js', '/js/state.js', '/js/lib.js', '/js/config.js', '/js/cloud.js', '/js/dialogs.js',
     '/js/items.js', '/js/pager.js', '/js/slide.js', '/js/plasma.js', '/js/create.js', '/js/explore.js',
-    '/js/library.js', '/js/viewer.js', '/js/account.js',
+    '/js/library.js', '/js/viewer.js', '/js/account.js', '/js/mixer.js',
     '/fonts/geist-latin.woff2', '/fonts/doto-latin.woff2',
     '/icons/icon.svg', '/icons/icon-192.png', '/icons/icon-512.png'
 ];

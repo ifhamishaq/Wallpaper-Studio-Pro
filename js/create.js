@@ -10,6 +10,7 @@ import * as cloud from './cloud.js';
 import { openDialog, closeDialog } from './dialogs.js';
 import * as items from './items.js';
 import { openViewer } from './viewer.js';
+import { open as openMixer } from './mixer.js';
 import { setCredits, refreshCredits } from './account.js';
 
 const { db } = cloud;
@@ -29,7 +30,6 @@ let plasma = null;
 let bdFront = 'b';
 let bdKey = '';
 let sampleKey = '';
-const built = {};
 
 // ------------------------------------------------------------------ prompt
 export function effectivePrompt() {
@@ -53,8 +53,7 @@ const shapeOf = (r) => (r < 0.8 ? 'tall' : r > 1.25 ? 'wide' : 'square');
 
 function renderChips() {
     const text = E.prompt.value.trim();
-    E.vSubject.textContent = state.exact ? 'Exact prompt' : text ? 'Custom' : GENRES[state.genre].name;
-    E.vStyle.textContent = STYLES[state.style].name;
+    E.vMix.textContent = `${state.exact ? 'Exact prompt' : text ? 'Custom' : GENRES[state.genre].name} × ${STYLES[state.style].name}`;
     E.vFormat.textContent = fmt().label;
     const tweaks = [state.steps !== model().maxSteps, state.seed != null, state.batch > 1, !!state.tone, MODELS.length > 1 && state.model !== MODELS[0].id].filter(Boolean).length;
     E.vTune.textContent = tweaks ? `${tweaks} changed` : model().name;
@@ -315,32 +314,29 @@ function applyRecipe(item) {
     toast(item.seed != null ? `Recipe loaded · seed ${item.seed}` : 'Recipe loaded', 'success');
 }
 
-function surprise() {
-    if (busy) return;
-    state.genre = randInt(GENRES.length);
-    state.style = randInt(STYLES.length);
+let spinning = false;
+/** Spins through random mixes (like a slot machine), then lands on one with a twist. */
+async function surprise() {
+    if (busy || spinning) return;
+    spinning = true;
+    clearResults();
+    const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
+    for (let n = 0; n < (reduced ? 1 : 7); n++) {
+        state.genre = randInt(GENRES.length);
+        state.style = randInt(STYLES.length);
+        applyAccent();
+        renderChips();
+        await sleep(85);
+    }
     state.modifier = pick(MODIFIERS);
     state.exact = false;
     E.prompt.value = '';
     autosize();
-    clearResults();
+    spinning = false;
     renderAll();
 }
 
 // ------------------------------------------------------------------ sheets
-function tileHtml(type, list) {
-    return list.map((it, i) => {
-        const h = type === 'subject' ? hueOf(it.color) : (i * 47 + 20) % 360;
-        return `<button type="button" class="pick" data-action="pick" data-type="${type}" data-i="${i}" aria-pressed="false" style="--tint:hsl(${h} 60% 38%)">
-            <img src="${esc(photo(it.image, 260, 330))}" alt="" loading="lazy" decoding="async"><span>${esc(it.name)}</span></button>`;
-    }).join('');
-}
-
-function syncPicks(type) {
-    const idx = type === 'subject' ? state.genre : state.style;
-    $$(`#grid-${type} .pick`).forEach((b) => b.setAttribute('aria-pressed', Number(b.dataset.i) === idx));
-}
-
 function renderFormats() {
     $('#list-format').innerHTML = FORMATS.map((f) => `
         <button type="button" class="fmt-row" data-action="pick-format" data-id="${f.id}" aria-pressed="${f.id === state.format}">
@@ -377,18 +373,9 @@ function renderTune() {
 
 function openSheet(name) {
     if (busy) return;
-    const dlg = $(`#sheet-${name}`);
-    if (name === 'subject' || name === 'style') {
-        const list = name === 'subject' ? GENRES : STYLES;
-        if (!built[name]) { $(`#grid-${name}`).innerHTML = tileHtml(name, list); built[name] = true; }
-        syncPicks(name);
-    }
     if (name === 'format') renderFormats();
     if (name === 'tune') renderTune();
-    openDialog(dlg);
-    if (name === 'subject' || name === 'style') {
-        requestAnimationFrame(() => $(`#grid-${name} .pick[aria-pressed="true"]`)?.scrollIntoView({ block: 'center' }));
-    }
+    openDialog($(`#sheet-${name}`));
 }
 
 // ------------------------------------------------------------------ init
@@ -402,13 +389,7 @@ export function init() {
         generate,
         surprise,
         sheet: (el) => openSheet(el.dataset.sheet),
-        pick: (el) => {
-            const type = el.dataset.type, i = Number(el.dataset.i);
-            if (type === 'subject') state.genre = i; else state.style = i;
-            state.modifier = '';
-            renderAll();
-            closeDialog(el.closest('dialog'));
-        },
+        mixer: (el) => { if (!busy) openMixer(el.dataset.focus); },
         'pick-format': (el) => { state.format = el.dataset.id; renderAll(); closeDialog(el.closest('dialog')); },
         'pick-model': (el) => { state.model = el.dataset.id; renderTune(); renderChips(); savePrefs(); },
         'pick-tone': (el) => { state.tone = el.dataset.id || null; renderTune(); renderChips(); savePrefs(); },
@@ -463,6 +444,11 @@ export function init() {
     // keep the "final prompt" field live while the tune sheet is open
     $('#sheet-tune').addEventListener('input', () => { E.finalPrompt.value = effectivePrompt(); });
 
+    on('selection', ({ done, surprise: spun }) => {
+        if (spun) { state.exact = false; E.prompt.value = ''; autosize(); }
+        if (done) { clearResults(); renderAll(); }
+        else { applyAccent(); renderChips(); }
+    });
     on('remix', applyRecipe);
     on('user:changed', renderCta);
     on('item:changed', () => renderResultBar());

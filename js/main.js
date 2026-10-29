@@ -8,6 +8,7 @@ import * as create from './create.js';
 import * as explore from './explore.js';
 import * as library from './library.js';
 import * as viewer from './viewer.js';
+import * as mixer from './mixer.js';
 
 const VIEWS = ['explore', 'create', 'library'];
 let current = null;
@@ -81,6 +82,7 @@ create.init();
 explore.init();
 library.init();
 viewer.init();
+mixer.init();
 applyLock();
 addEventListener('hashchange', route);
 route();
